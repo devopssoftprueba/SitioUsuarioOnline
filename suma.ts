@@ -1,11 +1,25 @@
-export class Calculadora {
-    private resultado: number = 0;
+/**
+ * Clase que representa un usuario del sistema.
+ */
+export class Usuario {
+    /**
+     * Nombre del usuario.
+     */
+    private nombre: string;
 
-    sumar(a: number, b: number): number {
-        return a + b;
+    /**
+     * Crea una nueva instancia de Usuario.
+     * @param nombre Nombre del usuario.
+     */
+    constructor(nombre: string) {
+        this.nombre = nombre;
     }
 
-    restar(a: number, b: number): number {
-        return a - b;
+    /**
+     * Devuelve el nombre del usuario.
+     * @returns El nombre del usuario.
+     */
+    obtenerNombre(): string {
+        return this.nombre;
     }
 }
