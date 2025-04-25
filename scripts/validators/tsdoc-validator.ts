@@ -12,7 +12,17 @@ const contieneEspanol = (texto: string): boolean => {
     return forbiddenWords.some(palabra => contenido.includes(palabra));
 };
 
-// 🔹 Obtener archivos modificados (staged, unstaged o en push)
+// 🔹 Archivos nuevos no versionados
+const getUntrackedFiles = (): string[] => {
+    try {
+        const output = execSync('git ls-files --others --exclude-standard', { encoding: 'utf8' }).trim();
+        return output ? output.split('\n').filter(f => f.match(/\.(ts|tsx)$/)) : [];
+    } catch {
+        return [];
+    }
+};
+
+// 🔹 Obtener archivos modificados
 const getModifiedFiles = (): string[] => {
     try {
         const stdin = process.env.GIT_STDIN || '';
@@ -40,14 +50,16 @@ const getModifiedFiles = (): string[] => {
             .filter(file => file.match(/\.(ts|tsx)$/))
             .filter(Boolean);
 
-        return [...new Set(allFiles)];
+        const untrackedFiles = getUntrackedFiles();
+
+        return [...new Set([...allFiles, ...untrackedFiles])];
     } catch (error) {
         console.error('❌ Error al obtener archivos modificados:', error);
         return [];
     }
 };
 
-// 🔹 Obtener líneas modificadas en un archivo
+// 🔹 Obtener líneas modificadas
 const getModifiedLines = (filePath: string): { [lineNumber: number]: boolean } => {
     try {
         const modifiedLines: { [lineNumber: number]: boolean } = {};
@@ -77,7 +89,7 @@ const getModifiedLines = (filePath: string): { [lineNumber: number]: boolean } =
 };
 
 // 🔹 Validar documentación TSDoc
-const validateTSDoc = (filePath: string): boolean => {
+const validateTSDoc = (filePath: string, isNewFile: boolean): boolean => {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const sourceFile = ts.createSourceFile(filePath, fileContent, ts.ScriptTarget.Latest, true);
     const parser = new TSDocParser();
@@ -85,43 +97,38 @@ const validateTSDoc = (filePath: string): boolean => {
     const modifiedLines = getModifiedLines(filePath);
 
     function visit(node: ts.Node) {
-        const start = node.getStart();
-        const startLine = sourceFile.getLineAndCharacterOfPosition(start).line + 1;
-        if (!modifiedLines[startLine]) return;
+        const startLine = sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1;
 
-        const isValidTarget =
-            (ts.isFunctionDeclaration(node) ||
-                ts.isMethodDeclaration(node) ||
-                ts.isClassDeclaration(node) ||
-                ts.isPropertyDeclaration(node)) &&
-            !('name' in node && typeof node.name?.getText === 'function' && /^get|^set/.test(node.name?.getText()));
+        if (!isNewFile && !modifiedLines[startLine]) return;
 
-        if (!isValidTarget) {
-            ts.forEachChild(node, visit);
-            return;
-        }
+        if (
+            ts.isFunctionDeclaration(node) ||
+            ts.isMethodDeclaration(node) ||
+            ts.isClassDeclaration(node) ||
+            ts.isPropertyDeclaration(node)
+        ) {
+            const comments = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) || [];
 
-        const comments = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) || [];
+            if (comments.length === 0) {
+                console.error(`❌ Falta documentación en ${filePath}:${startLine}`);
+                isValid = false;
+            } else {
+                comments.forEach(comment => {
+                    const commentText = fileContent.substring(comment.pos, comment.end);
+                    const parserContext = parser.parseString(commentText);
 
-        if (comments.length === 0) {
-            console.error(`❌ Falta documentación en ${filePath}:${startLine}`);
-            isValid = false;
-        } else {
-            comments.forEach(comment => {
-                const commentText = fileContent.substring(comment.pos, comment.end);
-                const parserContext = parser.parseString(commentText);
+                    if (parserContext.log.messages.length > 0) {
+                        console.error(`❌ Error de TSDoc en ${filePath}:${startLine}: ${parserContext.log.messages[0].text}`);
+                        isValid = false;
+                    }
 
-                if (parserContext.log.messages.length > 0) {
-                    console.error(`❌ Error de TSDoc en ${filePath}:${startLine}: ${parserContext.log.messages[0].text}`);
-                    isValid = false;
-                }
-
-                const plainText = commentText.replace(/\/\*\*|\*\//g, '').replace(/\*\s?/g, '');
-                if (contieneEspanol(plainText)) {
-                    console.error(`❌ La documentación debe estar en inglés (detectado español) en ${filePath}:${startLine}`);
-                    isValid = false;
-                }
-            });
+                    const plainText = commentText.replace(/\/\*\*|\*\//g, '').replace(/\*\s?/g, '');
+                    if (contieneEspanol(plainText)) {
+                        console.error(`❌ La documentación debe estar en inglés (detectado español) en ${filePath}:${startLine}`);
+                        isValid = false;
+                    }
+                });
+            }
         }
 
         ts.forEachChild(node, visit);
@@ -131,9 +138,10 @@ const validateTSDoc = (filePath: string): boolean => {
     return isValid;
 };
 
-// 🔹 Ejecutar validación en archivos modificados
+// 🔹 Ejecutar validación
 const main = (): void => {
     const modifiedFiles = getModifiedFiles();
+    const untrackedFiles = getUntrackedFiles();
 
     if (modifiedFiles.length === 0) {
         console.log('✅ No hay archivos TypeScript modificados.');
@@ -145,7 +153,8 @@ const main = (): void => {
 
     modifiedFiles.forEach(file => {
         const fullPath = path.resolve(process.cwd(), file);
-        if (fs.existsSync(fullPath) && !validateTSDoc(fullPath)) {
+        const isNewFile = untrackedFiles.includes(file);
+        if (fs.existsSync(fullPath) && !validateTSDoc(fullPath, isNewFile)) {
             success = false;
         }
     });

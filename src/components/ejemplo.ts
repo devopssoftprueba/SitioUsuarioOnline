@@ -1,12 +1,11 @@
 export class Usuario {
     nombre: string;
 
-    // El nombre del usuario
     getNombre(): string {
         return this.nombre;
     }
 
-    // Establece el nombre del usuario
+
     setNombre(nuevoNombre: string): void {
         this.nombre = nuevoNombre;
     }
@@ -22,5 +21,4 @@ export class Usuario {
         console.log(texto);
     }
 
-    metodosinerror(texto: string)
 }

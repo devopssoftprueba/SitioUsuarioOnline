@@ -9,7 +9,7 @@ export class Usuario {
 
     /**
      *
-     * @param nombre Nombre del usuario.
+     *
      */
     constructor(nombre: string) {
         this.nombre = nombre;
