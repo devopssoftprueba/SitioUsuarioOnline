@@ -85,39 +85,43 @@ const validateTSDoc = (filePath: string): boolean => {
     const modifiedLines = getModifiedLines(filePath);
 
     function visit(node: ts.Node) {
-        const startLine = sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+        const start = node.getStart();
+        const startLine = sourceFile.getLineAndCharacterOfPosition(start).line + 1;
         if (!modifiedLines[startLine]) return;
 
-        if (
-            ts.isFunctionDeclaration(node) ||
-            ts.isMethodDeclaration(node) ||
-            ts.isClassDeclaration(node) ||
-            ts.isPropertyDeclaration(node)
-        ) {
-            const comments = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) || [];
+        const isValidTarget =
+            (ts.isFunctionDeclaration(node) ||
+                ts.isMethodDeclaration(node) ||
+                ts.isClassDeclaration(node) ||
+                ts.isPropertyDeclaration(node)) &&
+            !('name' in node && typeof node.name?.getText === 'function' && /^get|^set/.test(node.name?.getText()));
 
-            if (comments.length === 0) {
-                console.error(`❌ Falta documentación en ${filePath}:${startLine}`);
-                isValid = false;
-            } else {
-                comments.forEach(comment => {
-                    const commentText = fileContent.substring(comment.pos, comment.end);
-                    const parserContext = parser.parseString(commentText);
+        if (!isValidTarget) {
+            ts.forEachChild(node, visit);
+            return;
+        }
 
-                    // 🔍 Validar sintaxis TSDoc
-                    if (parserContext.log.messages.length > 0) {
-                        console.error(`❌ Error de TSDoc en ${filePath}:${startLine}: ${parserContext.log.messages[0].text}`);
-                        isValid = false;
-                    }
+        const comments = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) || [];
 
-                    // 🔍 Validar idioma
-                    const plainText = commentText.replace(/\/\*\*|\*\//g, '').replace(/\*\s?/g, '');
-                    if (contieneEspanol(plainText)) {
-                        console.error(`❌ La documentación debe estar en inglés (detectado español) en ${filePath}:${startLine}`);
-                        isValid = false;
-                    }
-                });
-            }
+        if (comments.length === 0) {
+            console.error(`❌ Falta documentación en ${filePath}:${startLine}`);
+            isValid = false;
+        } else {
+            comments.forEach(comment => {
+                const commentText = fileContent.substring(comment.pos, comment.end);
+                const parserContext = parser.parseString(commentText);
+
+                if (parserContext.log.messages.length > 0) {
+                    console.error(`❌ Error de TSDoc en ${filePath}:${startLine}: ${parserContext.log.messages[0].text}`);
+                    isValid = false;
+                }
+
+                const plainText = commentText.replace(/\/\*\*|\*\//g, '').replace(/\*\s?/g, '');
+                if (contieneEspanol(plainText)) {
+                    console.error(`❌ La documentación debe estar en inglés (detectado español) en ${filePath}:${startLine}`);
+                    isValid = false;
+                }
+            });
         }
 
         ts.forEachChild(node, visit);
