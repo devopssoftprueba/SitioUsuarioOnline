@@ -42,20 +42,24 @@ function runValidation() {
 
     let validationResult = true;
     let allErrors: string[] = [];
+    let totalErrors = 0;
 
     filesChanged.forEach((file: string) => {
         const errors = validateTSDoc(file);
         if (errors.length > 0) {
-            allErrors.push(`Archivo: ${file}`);
+            allErrors.push(`\nArchivo: ${file}`);
             allErrors.push(`Total de errores: ${errors.length}`);
             allErrors.push(...errors);
+            totalErrors += errors.length;
             validationResult = false;
         }
     });
 
-    // Imprimir resultados
+    // Mostrar resumen
     if (allErrors.length > 0) {
+        console.log('⚠️ Errores encontrados en la validación TSDoc:');
         allErrors.forEach(error => console.log(error));
+        console.log(`\nTotal de errores: ${totalErrors}`);
     }
 
     return validationResult;
@@ -63,7 +67,7 @@ function runValidation() {
 
 const result = runValidation();
 if (!result) {
-    console.error("❌ La validación de TSDoc falló. Revisa los archivos modificados.");
+    console.error("❌ Validación de TSDoc fallida. Por favor, corrige los problemas de documentación antes de enviar los cambios.");
     process.exit(1);
 } else {
     console.log("✅ La validación de TSDoc fue exitosa.");
