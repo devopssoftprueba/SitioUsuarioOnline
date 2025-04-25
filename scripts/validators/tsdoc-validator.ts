@@ -62,6 +62,13 @@ function validateFile(filePath: string): string[] {
 
 // Ejecutar la validación
 function runValidator() {
+    // Obtener información de los commits
+    const fromCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+    const toCommit = execSync('git rev-parse --short HEAD~1', { encoding: 'utf-8' }).trim();
+
+    console.log("Desde commit:", fromCommit);
+    console.log("Hasta commit:", toCommit);
+
     const files = getStagedFiles();
     let allErrors: string[] = [];
 
