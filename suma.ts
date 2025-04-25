@@ -25,14 +25,33 @@ export class Usuario {
 
 }
 
-function hola() {
-    return 'mundo';
+/**
+ * Función que devuelve un saludo.
+ *
+ * @returns Un saludo en forma de cadena.
+ */
+function saludo(): string {
+    return '¡Hola, usuario!';
 }
 
+/**
+ * Interfaz para describir la estructura de un objeto producto.
+ */
+export interface Producto {
+    nombre: string;
+    precio: number;
+}
 
-
-
-
-
-
-
+/**
+ * Función para crear un nuevo producto.
+ *
+ * @param nombre El nombre del producto.
+ * @param precio El precio del producto.
+ * @returns Un objeto producto con el nombre y precio proporcionados.
+ */
+function crearProducto(nombre: string, precio: number): Producto {
+    return {
+        nombre: nombre,
+        precio: precio
+    };
+}
