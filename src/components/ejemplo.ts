@@ -24,4 +24,4 @@ export class Usuario {
 }
 // archivo con error.ts
 export function sinDoc() {
-    return true;
+    return  true;
