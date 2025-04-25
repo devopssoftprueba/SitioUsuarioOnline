@@ -8,7 +8,7 @@ export class Usuario {
     private nombre: string;
 
     /**
-     * Crea una nueva instancia de Usuario.
+     *
      * @param nombre Nombre del usuario.
      */
     constructor(nombre: string) {
