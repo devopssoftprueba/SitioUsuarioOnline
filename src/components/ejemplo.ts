@@ -21,4 +21,6 @@ export class Usuario {
     metodoConError(texto: string): void {
         console.log(texto);
     }
+
+    metodosinerror(texto: string)
 }
