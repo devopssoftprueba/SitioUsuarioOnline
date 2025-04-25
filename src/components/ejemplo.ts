@@ -1,27 +1,9 @@
-export class Usuario {
-    nombre: string;
-
-    getNombre(): string {
-        return this.nombre;
-    }
-
-
-    setNombre(nuevoNombre: string): void {
-        this.nombre = nuevoNombre;
-    }
-
-    crearUsuario(nombre: string): void {
-        console.log('Usuario creado');
-    }
-
-    /** Esto está mal cerrado
-     * @param texto texto
-     */
-    metodoConError(texto: string): void {
-        console.log(texto);
-    }
-
+/**
+ * Calcula el área de un círculo.
+ *
+ * @param radio El radio del círculo.   // Falta el tipo
+ * @returns El área calculada.          // Falta el tipo
+ */
+function calcularAreaCirculo(radio: number): number {
+    return Math.PI * radio * radio;
 }
-// archivo con error.ts
-export function sinDoc() {
-    return    true;
