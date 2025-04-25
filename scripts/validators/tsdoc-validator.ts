@@ -2,38 +2,38 @@ import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import rules from './tsdoc-rules'; // Importación de la exportación por defecto
 
-
 function validateTSDoc(filePath: string) {
     const fileContent = readFileSync(filePath, 'utf8');
+    const lines = fileContent.split('\n');
+    let errors: string[] = [];
 
     // Validación para funciones
-    if (fileContent.includes('function')) {
-        const missingFunctionTags = rules.function.requiredTags.filter(tag => !fileContent.includes(tag));
-        if (missingFunctionTags.length > 0) {
-            console.log(`ERROR: La función no tiene los tags: ${missingFunctionTags.join(', ')}`);
-            return false;
+    lines.forEach((line, index) => {
+        if (line.includes('function')) {
+            const missingFunctionTags = rules.function.requiredTags.filter(tag => !line.includes(tag));
+            if (missingFunctionTags.length > 0) {
+                errors.push(`${index + 1} | ERROR | [x] La función no tiene los tags: ${missingFunctionTags.join(', ')}`);
+            }
         }
-    }
 
-    // Validación para clases
-    if (fileContent.includes('class')) {
-        const missingClassTags = rules.class.requiredTags.filter(tag => !fileContent.includes(tag));
-        if (missingClassTags.length > 0) {
-            console.log(`ERROR: La clase no tiene los tags: ${missingClassTags.join(', ')}`);
-            return false;
+        // Validación para clases
+        if (line.includes('class')) {
+            const missingClassTags = rules.class.requiredTags.filter(tag => !line.includes(tag));
+            if (missingClassTags.length > 0) {
+                errors.push(`${index + 1} | ERROR | [x] La clase no tiene los tags: ${missingClassTags.join(', ')}`);
+            }
         }
-    }
 
-    // Validación para propiedades
-    if (fileContent.includes('property')) {
-        const missingPropertyTags = rules.property.requiredTags.filter(tag => !fileContent.includes(tag));
-        if (missingPropertyTags.length > 0) {
-            console.log(`ERROR: La propiedad no tiene los tags: ${missingPropertyTags.join(', ')}`);
-            return false;
+        // Validación para propiedades
+        if (line.includes('property')) {
+            const missingPropertyTags = rules.property.requiredTags.filter(tag => !line.includes(tag));
+            if (missingPropertyTags.length > 0) {
+                errors.push(`${index + 1} | ERROR | [x] La propiedad no tiene los tags: ${missingPropertyTags.join(', ')}`);
+            }
         }
-    }
+    });
 
-    return true;
+    return errors;
 }
 
 function runValidation() {
@@ -41,21 +41,30 @@ function runValidation() {
     const filesChanged = diff.split('\n').filter((file: string) => file.endsWith('.ts'));
 
     let validationResult = true;
+    let allErrors: string[] = [];
 
     filesChanged.forEach((file: string) => {
-        const result = validateTSDoc(file);
-        if (!result) {
+        const errors = validateTSDoc(file);
+        if (errors.length > 0) {
+            allErrors.push(`Archivo: ${file}`);
+            allErrors.push(`Total de errores: ${errors.length}`);
+            allErrors.push(...errors);
             validationResult = false;
         }
     });
+
+    // Imprimir resultados
+    if (allErrors.length > 0) {
+        allErrors.forEach(error => console.log(error));
+    }
 
     return validationResult;
 }
 
 const result = runValidation();
 if (!result) {
-    console.error("La validación de TSDoc falló. Revisa los archivos modificados.");
+    console.error("❌ La validación de TSDoc falló. Revisa los archivos modificados.");
     process.exit(1);
 } else {
-    console.log("La validación de TSDoc fue exitosa.");
+    console.log("✅ La validación de TSDoc fue exitosa.");
 }
