@@ -1,92 +1,61 @@
-import { TSDocParser } from '@microsoft/tsdoc';
-import * as fs from 'fs';
-import * as path from 'path';
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
+import rules from './tsdoc-rules'; // Importación de la exportación por defecto
 
-// Archivos permitidos
-const FILE_REGEX = /\.(ts|tsx|js|jsx)$/;
 
-// Tipos de declaraciones a validar
-const DECLARATION_REGEX = /^\+.*?(function|class|interface|type|enum)\s+(\w+)/;
+function validateTSDoc(filePath: string) {
+    const fileContent = readFileSync(filePath, 'utf8');
 
-// Obtener archivos con cambios staged
-function getStagedFiles(): string[] {
-    const output = execSync('git diff --staged --name-only --diff-filter=ACM', {
-        encoding: 'utf-8'
-    });
-
-    return output.split('\n').filter(file =>
-        FILE_REGEX.test(file) && fs.existsSync(file)
-    );
-}
-
-// Validar un archivo completo
-function validateFile(filePath: string): string[] {
-    const diff = execSync(`git diff --staged ${filePath}`, { encoding: 'utf-8' });
-    const addedLines = diff.split('\n').filter(line => line.startsWith('+') && !line.startsWith('+++'));
-
-    const source = fs.readFileSync(filePath, 'utf-8');
-    const lines = source.split('\n');
-    const errors: string[] = [];
-
-    const parser = new TSDocParser();
-
-    for (let i = 0; i < addedLines.length; i++) {
-        const line = addedLines[i].slice(1); // quitar el "+"
-
-        const match = line.match(DECLARATION_REGEX);
-        if (!match) continue;
-
-        const type = match[1];
-        const name = match[2];
-
-        const originalLineIndex = lines.findIndex(l => l.includes(match[0].substring(1)));
-        if (originalLineIndex === -1) continue;
-
-        const docBlock = lines[originalLineIndex - 1];
-        const hasDoc = docBlock && docBlock.trim().startsWith('/**');
-
-        if (!hasDoc) {
-            errors.push(`🔴 Falta documentación para ${type} "${name}" en ${filePath}`);
-            continue;
-        }
-
-        const parsed = parser.parseString(docBlock);
-        if (parsed.log.messages.length > 0) {
-            errors.push(`🔴 Documentación inválida para ${type} "${name}" en ${filePath}`);
+    // Validación para funciones
+    if (fileContent.includes('function')) {
+        const missingFunctionTags = rules.function.requiredTags.filter(tag => !fileContent.includes(tag));
+        if (missingFunctionTags.length > 0) {
+            console.log(`ERROR: La función no tiene los tags: ${missingFunctionTags.join(', ')}`);
+            return false;
         }
     }
 
-    return errors;
+    // Validación para clases
+    if (fileContent.includes('class')) {
+        const missingClassTags = rules.class.requiredTags.filter(tag => !fileContent.includes(tag));
+        if (missingClassTags.length > 0) {
+            console.log(`ERROR: La clase no tiene los tags: ${missingClassTags.join(', ')}`);
+            return false;
+        }
+    }
+
+    // Validación para propiedades
+    if (fileContent.includes('property')) {
+        const missingPropertyTags = rules.property.requiredTags.filter(tag => !fileContent.includes(tag));
+        if (missingPropertyTags.length > 0) {
+            console.log(`ERROR: La propiedad no tiene los tags: ${missingPropertyTags.join(', ')}`);
+            return false;
+        }
+    }
+
+    return true;
 }
 
-// Ejecutar la validación
-function runValidator() {
-    // Obtener información de los commits
-    const fromCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-    const toCommit = execSync('git rev-parse --short HEAD~1', { encoding: 'utf-8' }).trim();
+function runValidation() {
+    const diff = execSync('git diff --name-only HEAD~1 HEAD').toString();
+    const filesChanged = diff.split('\n').filter((file: string) => file.endsWith('.ts'));
 
-    console.log("Desde commit:", fromCommit);
-    console.log("Hasta commit:", toCommit);
+    let validationResult = true;
 
-    const files = getStagedFiles();
-    let allErrors: string[] = [];
-
-    files.forEach(file => {
-        const errors = validateFile(file);
-        if (errors.length > 0) {
-            allErrors = allErrors.concat(errors);
+    filesChanged.forEach((file: string) => {
+        const result = validateTSDoc(file);
+        if (!result) {
+            validationResult = false;
         }
     });
 
-    if (allErrors.length > 0) {
-        console.log('\n❌ Errores de documentación encontrados:\n');
-        allErrors.forEach(e => console.log(e));
-        process.exit(1); // ❗❗ Bloquea el push
-    } else {
-        console.log('✅ Todos los archivos pasaron la validación.');
-        process.exit(0);
-    }
+    return validationResult;
 }
 
-runValidator();
+const result = runValidation();
+if (!result) {
+    console.error("La validación de TSDoc falló. Revisa los archivos modificados.");
+    process.exit(1);
+} else {
+    console.log("La validación de TSDoc fue exitosa.");
+}
