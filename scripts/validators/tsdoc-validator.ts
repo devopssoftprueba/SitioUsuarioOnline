@@ -4,6 +4,14 @@ import { execSync } from 'child_process';
 import * as ts from 'typescript';
 import { TSDocParser } from '@microsoft/tsdoc';
 
+// 🔹 Palabras prohibidas en español
+const forbiddenWords = ['usuario', 'nombre', 'devuelve', 'crea una', 'nueva instancia', 'sistema', 'el nombre', 'representa', 'instancia'];
+
+const contieneEspanol = (texto: string): boolean => {
+    const contenido = texto.toLowerCase();
+    return forbiddenWords.some(palabra => contenido.includes(palabra));
+};
+
 // 🔹 Obtener archivos modificados (staged, unstaged o en push)
 const getModifiedFiles = (): string[] => {
     try {
@@ -29,7 +37,7 @@ const getModifiedFiles = (): string[] => {
         const filesFromDiff = execSync(diffCommand, { encoding: 'utf8' }).trim();
 
         const allFiles = [...unstagedFiles.split('\n'), ...stagedFiles.split('\n'), ...filesFromDiff.split('\n')]
-            .filter(file => file.match(/\.(ts|tsx)$/)) // Solo archivos .ts y .tsx
+            .filter(file => file.match(/\.(ts|tsx)$/))
             .filter(Boolean);
 
         return [...new Set(allFiles)];
@@ -80,8 +88,14 @@ const validateTSDoc = (filePath: string): boolean => {
         const startLine = sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1;
         if (!modifiedLines[startLine]) return;
 
-        if (ts.isFunctionDeclaration(node) || ts.isMethodDeclaration(node)) {
+        if (
+            ts.isFunctionDeclaration(node) ||
+            ts.isMethodDeclaration(node) ||
+            ts.isClassDeclaration(node) ||
+            ts.isPropertyDeclaration(node)
+        ) {
             const comments = ts.getLeadingCommentRanges(sourceFile.text, node.getFullStart()) || [];
+
             if (comments.length === 0) {
                 console.error(`❌ Falta documentación en ${filePath}:${startLine}`);
                 isValid = false;
@@ -89,8 +103,17 @@ const validateTSDoc = (filePath: string): boolean => {
                 comments.forEach(comment => {
                     const commentText = fileContent.substring(comment.pos, comment.end);
                     const parserContext = parser.parseString(commentText);
+
+                    // 🔍 Validar sintaxis TSDoc
                     if (parserContext.log.messages.length > 0) {
                         console.error(`❌ Error de TSDoc en ${filePath}:${startLine}: ${parserContext.log.messages[0].text}`);
+                        isValid = false;
+                    }
+
+                    // 🔍 Validar idioma
+                    const plainText = commentText.replace(/\/\*\*|\*\//g, '').replace(/\*\s?/g, '');
+                    if (contieneEspanol(plainText)) {
+                        console.error(`❌ La documentación debe estar en inglés (detectado español) en ${filePath}:${startLine}`);
                         isValid = false;
                     }
                 });
@@ -113,7 +136,7 @@ const main = (): void => {
         return;
     }
 
-    console.log(`🔍 Validando TSDoc en ${modifiedFiles.length} archivos...`);
+    console.log(`🔍 Validando TSDoc e idioma en ${modifiedFiles.length} archivo(s)...`);
     let success = true;
 
     modifiedFiles.forEach(file => {
@@ -124,7 +147,7 @@ const main = (): void => {
     });
 
     if (!success) {
-        console.error('\n❌ Errores en la documentación. Corrige antes de hacer push.\n');
+        console.error('\n❌ Errores encontrados. Corrige la documentación antes de hacer push.\n');
         process.exit(1);
     } else {
         console.log('\n✅ Todos los archivos pasaron la validación.\n');
