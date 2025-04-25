@@ -167,4 +167,6 @@ const main = (): void => {
     }
 };
 
+console.log('🧪 Ejecutando validador TSDoc desde pre-push...');
+
 main();
