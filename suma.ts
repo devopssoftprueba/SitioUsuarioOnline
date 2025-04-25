@@ -46,7 +46,13 @@ function crearProducto(nombre: string, precio: number): Producto {
 
 }
 
-
+/**
+ * Función para crear un nuevo producto.
+ *
+ * @param nombre El nombre del producto.
+ * @param precio El precio del producto.
+ * @returns Un objeto producto con el nombre y precio proporcionados.
+ */
 function funcionsindoc(nombre: string, precio: number): Producto {
     return {
         nombre: nombre,
