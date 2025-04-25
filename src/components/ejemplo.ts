@@ -1,7 +1,7 @@
 /**
  * Clase que representa a un Usuario en el sistema.
  *
- * Esta clase contiene información básica sobre un usuario, como su nombre y correo electrónico,
+ * @description Esta clase contiene información básica sobre un usuario, como su nombre y correo electrónico,
  * y ofrece métodos para interactuar con estos datos.
  *
  * @category Modelo
