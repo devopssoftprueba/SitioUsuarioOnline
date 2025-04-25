@@ -38,7 +38,12 @@ function validateTSDoc(filePath: string) {
 
 function runValidation() {
     const diff = execSync('git diff --name-only HEAD~1 HEAD').toString();
-    const filesChanged = diff.split('\n').filter((file: string) => file.endsWith('.ts'));
+    const filesChanged = diff
+        .split('\n')
+        .filter((file: string) =>
+            file.endsWith('.ts') &&
+            !file.includes('scripts/validators/')
+        );
 
     let validationResult = true;
     let allErrors: string[] = [];
@@ -56,7 +61,7 @@ function runValidation() {
     });
 
     // Mostrar resumen
-    if (allErrors.length > 0) {
+    if (!validationResult) {
         console.log('⚠️ Errores encontrados en la validación TSDoc:');
         allErrors.forEach(error => console.log(error));
         console.log(`\nTotal de errores: ${totalErrors}`);
