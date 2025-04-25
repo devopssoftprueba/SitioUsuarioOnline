@@ -42,9 +42,18 @@ function crearProducto(nombre: string, precio: number): Producto {
         nombre: nombre,
         precio: precio
     };
+
+
 }
 
 
+function funcionsindoc(nombre: string, precio: number): Producto {
+    return {
+        nombre: nombre,
+        precio: precio
+    };
 
+
+}
 
 
