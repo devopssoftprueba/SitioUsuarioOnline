@@ -108,3 +108,62 @@ function runValidation(): boolean {
 
     return validationResult;
 }
+
+/**
+ * Clase que representa un servicio de utilidades para operaciones matemáticas básicas.
+ *
+ * @category Utilities
+ * @package utils
+ * @author Ronald
+ * @version 1.0.0
+ * @since 2025-04-28
+ */
+export class MathService {
+    /**
+     * Suma dos números y devuelve el resultado.
+     *
+     * @param a - Primer número a sumar.
+     * @param b - Segundo número a sumar.
+     * @returns Resultado de la suma de `a` y `b`.
+     */
+    public add(a: number, b: number): number {
+        return a + b;
+    }
+
+    /**
+     * Resta dos números y devuelve el resultado.
+     *
+     * @param a - Número del cual se va a restar.
+     * @param b - Número que se va a restar.
+     * @returns Resultado de la resta de `a` menos `b`.
+     */
+    public subtract(a: number, b: number): number {
+        return a - b;
+    }
+
+    /**
+     * Multiplica dos números y devuelve el resultado.
+     *
+     * @param a - Primer número a multiplicar.
+     * @param b - Segundo número a multiplicar.
+     * @returns Resultado de la multiplicación de `a` por `b`.
+     */
+    public multiply(a: number, b: number): number {
+        return a * b;
+    }
+
+    /**
+     * Divide dos números y devuelve el resultado.
+     *
+     * @param a - Dividendo.
+     * @param b - Divisor.
+     * @returns Resultado de la división de `a` entre `b`.
+     * @throws Error si `b` es igual a cero.
+     */
+    public divide(a: number, b: number): number {
+        if (b === 0) {
+            throw new Error('Division by zero is not allowed.');
+        }
+        return a / b;
+    }
+}
