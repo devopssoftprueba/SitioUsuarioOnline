@@ -17,4 +17,23 @@ class ExampleClass {
      * @description Esta propiedad almacena un mensaje de ejemplo que puede ser utilizado en otras partes del código.
      */
     exampleProperty: string = 'Hello World';
+
+
 }
+
+/**
+ * Calcula el área de un círculo dado su radio.
+ *
+ * @param radius - El radio del círculo.
+ * @returns El área del círculo calculada con la fórmula `π * radius^2`.
+ * @category Math
+ * @package Geometry
+ * @author Ronald
+ * @version 1.0.0
+ * @since 2025-04-28
+ * @description Esta función toma el radio de un círculo y devuelve su área.
+ */
+function calculateCircleArea(radius: number): number {
+    return Math.PI * Math.pow(radius, 2);
+}
+
