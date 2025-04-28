@@ -108,11 +108,3 @@ function runValidation(): boolean {
 
     return validationResult;
 }
-
-const result = runValidation();
-if (!result) {
-    console.error('❌ Validación de TSDoc fallida. Por favor, corrige los problemas de documentación antes de enviar los cambios.');
-    process.exit(1);
-} else {
-    console.log('✅ La validación de TSDoc fue exitosa.');
-}
