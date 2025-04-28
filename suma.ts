@@ -1,13 +1,4 @@
-/**
- * Esta es una clase de ejemplo que realiza operaciones básicas con métodos.
- *
- * @category Ejemplo
- * @package ejemplo
- * @author Ronald
- * @version 1.0.0
- * @since 2025-04-28
- * @description Clase de ejemplo que incluye un metodo para combinar parámetros y una propiedad de ejemplo.
- */
+
 class ExampleClass {
     /**
      * Metodo que toma dos parámetros y devuelve un string con ambos valores.
