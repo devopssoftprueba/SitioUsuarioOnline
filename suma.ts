@@ -5,6 +5,11 @@ import rules from './tsdoc-rules';
 
 type ChangedLines = Record<string, Set<number>>;
 
+/**
+ * Obtiene las líneas modificadas de los archivos staged.
+ *
+ * @returns Un objeto con archivos y sus líneas modificadas.
+ */
 function getStagedChangedLines(): ChangedLines {
     const diffOutput = execSync('git diff --staged -U0 --no-color', { encoding: 'utf8' });
     const changedLines: ChangedLines = {};
@@ -13,7 +18,6 @@ function getStagedChangedLines(): ChangedLines {
     const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
 
     let currentFile = '';
-    let currentLine = 0;
 
     const lines = diffOutput.split('\n');
     for (const line of lines) {
@@ -39,45 +43,96 @@ function getStagedChangedLines(): ChangedLines {
     return changedLines;
 }
 
-function validateLine(line: string, index: number, type: keyof typeof rules): string[] {
-    const missingTags = rules[type].requiredTags.filter(tag => !line.includes(tag));
-    if (missingTags.length > 0) {
-        return [`${index + 1} | ERROR | [x] La ${type} no tiene los tags: ${missingTags.join(', ')}`];
+/**
+ * Busca la declaración de clase/método/propiedad más cercana hacia arriba.
+ *
+ * @param lines - Líneas del archivo.
+ * @param startIndex - Índice desde donde buscar hacia arriba.
+ * @returns El índice de la declaración encontrada, o -1 si no encuentra.
+ */
+function findDeclarationLine(lines: string[], startIndex: number): number {
+    for (let i = startIndex; i >= 0; i--) {
+        const trimmed = lines[i].trim();
+        if (
+            trimmed.startsWith('class ') ||
+            trimmed.startsWith('interface ') ||
+            trimmed.startsWith('function ') ||
+            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos
+            trimmed.startsWith('public ') ||
+            trimmed.startsWith('private ') ||
+            trimmed.startsWith('protected ')
+        ) {
+            return i;
+        }
     }
+    return -1;
+}
+
+/**
+ * Valida si una declaración tiene documentación inmediatamente arriba.
+ *
+ * @param lines - Líneas del archivo.
+ * @param declarationIndex - Índice donde está la declaración.
+ * @returns Lista de errores encontrados.
+ */
+function validateDocumentation(lines: string[], declarationIndex: number): string[] {
+    const previousLineIndex = declarationIndex - 1;
+    if (previousLineIndex < 0) {
+        return ['No hay documentación encima de la declaración.'];
+    }
+
+    const trimmedPrev = lines[previousLineIndex].trim();
+    if (!trimmedPrev.startsWith('/**')) {
+        return ['Falta el bloque TSDoc encima de la declaración.'];
+    }
+
     return [];
 }
 
+/**
+ * Valida un archivo verificando documentación correcta en cambios.
+ *
+ * @param filePath - Ruta del archivo.
+ * @param changed - Líneas cambiadas.
+ * @returns Lista de errores encontrados.
+ */
 function validateFile(filePath: string, changed: Set<number>): string[] {
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
-    let errors: string[] = [];
+    const errors: string[] = [];
 
-    lines.forEach((line, index) => {
-        if (!changed.has(index + 1)) return;
+    const alreadyValidated = new Set<number>();
 
-        const trimmed = line.trim();
+    changed.forEach(lineNumber => {
+        const lineIndex = lineNumber - 1;
 
-        if (trimmed.startsWith('function') || trimmed.includes('function ')) {
-            errors.push(...validateLine(trimmed, index, 'function'));
-        }
+        const declarationIndex = findDeclarationLine(lines, lineIndex);
+        if (declarationIndex === -1) return;
 
-        if (trimmed.startsWith('class ')) {
-            errors.push(...validateLine(trimmed, index, 'class'));
-        }
+        if (alreadyValidated.has(declarationIndex)) return;
+        alreadyValidated.add(declarationIndex);
 
-        if (trimmed.startsWith('private') || trimmed.startsWith('public') || trimmed.includes(':') && trimmed.includes(';')) {
-            errors.push(...validateLine(trimmed, index, 'property'));
+        const validationErrors = validateDocumentation(lines, declarationIndex);
+        if (validationErrors.length > 0) {
+            const codeLine = lines[declarationIndex].trim();
+            errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`);
+            errors.push(...validationErrors.map(e => `  - ${e}`));
         }
     });
 
     return errors;
 }
 
+/**
+ * Ejecuta la validación sobre todos los archivos staged.
+ *
+ * @returns True si pasa la validación, false si hay errores.
+ */
 function runValidation(): boolean {
     const changedLines = getStagedChangedLines();
 
     let validationResult = true;
-    let allErrors: string[] = [];
+    const allErrors: string[] = [];
 
     for (const file in changedLines) {
         if (
@@ -87,8 +142,7 @@ function runValidation(): boolean {
             !file.endsWith('.jsx')
         ) continue;
 
-        // Evita validarse a sí mismo
-        if (file.endsWith('tsdoc-validator.ts')) continue;
+        if (file.endsWith('tsdoc-validator.ts')) continue; // evita auto-validarse
 
         const fullPath = path.resolve(file);
         const errors = validateFile(fullPath, changedLines[file]);
@@ -101,55 +155,16 @@ function runValidation(): boolean {
     }
 
     if (!validationResult) {
-        console.log('⚠️ Errores encontrados en la validación TSDoc:');
-        allErrors.forEach(e => console.log(e));
+        console.log('⚠️  Errores encontrados en la validación TSDoc:');
+        allErrors.forEach(error => console.log(error));
         console.log(`\nTotal de errores: ${allErrors.length}`);
     }
 
     return validationResult;
 }
 
-/**
- * Clase que representa un servicio de utilidades para operaciones matemáticas básicas.
- *
- * @category Utilities
- * @package utils
- * @author Ronald
- * @version 1.0.0
- * @since 2025-04-28
- */
-export class MathService {
-    /**
-     * Suma dos números y devuelve el resultado.
-     *
-     * @param a - Primer número a sumar.
-     * @param b - Segundo número a sumar.
-     * @returns Resultado de la suma de `a` y `b`.
-     */
-    public add(a: number, b: number): number {
-        return a + b;
-    }
-
-    public subtract(a: number, b: number): number {
-        return a - b;
-    }
-
-    /**
-     * Multiplica dos números y devuelve el resultado.
-     *
-     * @param a - Primer número a multiplicar.
-     * @param b - Segundo número a multiplicar.
-     * @returns Resultado de la multiplicación de `a` por `b`.
-     */
-    public multiply(a: number, b: number): number {
-        return a * b;
-    }
-
-
-    public divide(a: number, b: number): number {
-        if (b === 0) {
-            throw new Error('Division by zero is not allowed.');
-        }
-        return a / b;
-    }
+// Ejecuta el validador si este archivo es llamado directamente
+if (require.main === module) {
+    const result = runValidation();
+    process.exit(result ? 0 : 1);
 }
