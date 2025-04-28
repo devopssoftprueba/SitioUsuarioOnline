@@ -16,7 +16,7 @@ class ExampleClass {
      * @since 2025-04-28
      * @description Esta propiedad almacena un mensaje de ejemplo que puede ser utilizado en otras partes del código.
      */
-    exampleProperty: string = 'Hello World';
+    exampleProperty: string = 'hola World';
 
 
 }
