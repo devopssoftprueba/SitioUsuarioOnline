@@ -1,34 +1,104 @@
 import { execSync } from 'child_process';
-import rules from './tsdoc-rules'; // Importación de reglas
+import { readFileSync } from 'fs';
+import * as path from 'path';
+
+type ChangedLines = Record<string, Set<number>>;
 
 /**
- * Valida un fragmento de líneas nuevas.
+ * Obtiene las líneas modificadas o agregadas en el área de staging.
+ *
+ * @returns Registro de archivos con líneas cambiadas.
  */
-function validateTSDocFragment(lines: string[]) {
+function getStagedChangedLines(): ChangedLines {
+    const diffOutput = execSync('git diff --staged -U0 --no-color', { encoding: 'utf8' });
+    const changedLines: ChangedLines = {};
+
+    const fileRegex = /^diff --git a\/(.+?) b\/(.+)$/;
+    const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
+
+    let currentFile = '';
+
+    const lines = diffOutput.split('\n');
+    for (const line of lines) {
+        const fileMatch = line.match(fileRegex);
+        if (fileMatch) {
+            const [, , newFile] = fileMatch;
+            currentFile = newFile;
+            continue;
+        }
+
+        const hunkMatch = line.match(hunkRegex);
+        if (hunkMatch) {
+            const startLine = parseInt(hunkMatch[1], 10);
+            const lineCount = hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1;
+            const linesSet = changedLines[currentFile] || new Set<number>();
+            for (let i = 0; i < lineCount; i++) {
+                linesSet.add(startLine + i);
+            }
+            changedLines[currentFile] = linesSet;
+        }
+    }
+
+    return changedLines;
+}
+
+/**
+ * Valida si existe un bloque de documentación TSDoc encima de una línea de código.
+ *
+ * @param lines Contenido del archivo dividido en líneas.
+ * @param index Índice de la línea donde está la definición.
+ * @returns `true` si encontró documentación arriba, `false` si no.
+ */
+function hasDocumentationAbove(lines: string[], index: number): boolean {
+    let i = index - 1;
+
+    while (i >= 0) {
+        const line = lines[i].trim();
+        if (line === '') {
+            i--;
+            continue; // saltar líneas vacías
+        }
+        if (line.startsWith('/**')) {
+            return true; // encontró inicio de TSDoc
+        }
+        if (line.startsWith('//') || line.startsWith('/*')) {
+            return false; // comentario que no es TSDoc
+        }
+        // encontró código real, sin comentarios
+        return false;
+    }
+
+    return false;
+}
+
+/**
+ * Valida el archivo verificando que todas las clases, métodos y propiedades nuevas/modificadas tengan documentación.
+ *
+ * @param filePath Ruta del archivo.
+ * @param changed Líneas cambiadas en el archivo.
+ * @returns Lista de errores encontrados.
+ */
+function validateFile(filePath: string, changed: Set<number>): string[] {
+    const fileContent = readFileSync(filePath, 'utf8');
+    const lines = fileContent.split('\n');
     let errors: string[] = [];
 
     lines.forEach((line, index) => {
-        // Validar función
-        if (line.includes('function')) {
-            const missingFunctionTags = rules.function.requiredTags.filter(tag => !line.includes(tag));
-            if (missingFunctionTags.length > 0) {
-                errors.push(`${index + 1} | ERROR | [x] La función no tiene los tags: ${missingFunctionTags.join(', ')}`);
-            }
-        }
+        if (!changed.has(index + 1)) return; // +1 porque git diff empieza en 1
 
-        // Validar clase
-        if (line.includes('class')) {
-            const missingClassTags = rules.class.requiredTags.filter(tag => !line.includes(tag));
-            if (missingClassTags.length > 0) {
-                errors.push(`${index + 1} | ERROR | [x] La clase no tiene los tags: ${missingClassTags.join(', ')}`);
-            }
-        }
+        const trimmed = line.trim();
 
-        // Validar propiedad
-        if (line.includes('property')) {
-            const missingPropertyTags = rules.property.requiredTags.filter(tag => !line.includes(tag));
-            if (missingPropertyTags.length > 0) {
-                errors.push(`${index + 1} | ERROR | [x] La propiedad no tiene los tags: ${missingPropertyTags.join(', ')}`);
+        // Detecta métodos, clases o propiedades
+        const isFunction = trimmed.startsWith('function ') || trimmed.includes('function ');
+        const isClass = trimmed.startsWith('class ');
+        const isProperty = (
+            (trimmed.startsWith('public') || trimmed.startsWith('private') || trimmed.startsWith('protected')) &&
+            trimmed.includes(':')
+        );
+
+        if (isFunction || isClass || isProperty) {
+            if (!hasDocumentationAbove(lines, index)) {
+                errors.push(`${index + 1} | ERROR | [x] Falta documentación encima de ${isFunction ? 'función' : isClass ? 'clase' : 'propiedad'}`);
             }
         }
     });
@@ -37,80 +107,46 @@ function validateTSDocFragment(lines: string[]) {
 }
 
 /**
- * Obtiene las líneas nuevas agregadas en git staged.
+ * Ejecuta toda la validación TSDoc.
+ *
+ * @returns `true` si pasó toda la validación, `false` si hubo errores.
  */
-function getChangedLines(): Record<string, string[]> {
-    const changedLines: Record<string, string[]> = {};
-
-    try {
-        const diffOutput = execSync('git diff --staged -U0', { encoding: 'utf8' });
-
-        let currentFile = '';
-        const lines = diffOutput.split('\n');
-
-        for (const line of lines) {
-            if (line.startsWith('+++ b/')) {
-                currentFile = line.replace('+++ b/', '').trim();
-                continue;
-            }
-
-            if (currentFile && line.startsWith('+') && !line.startsWith('+++')) {
-                if (!changedLines[currentFile]) {
-                    changedLines[currentFile] = [];
-                }
-                changedLines[currentFile].push(line.substring(1)); // quitar '+'
-            }
-        }
-    } catch (error) {
-        console.error('Error al obtener el git diff:', error);
-    }
-
-    return changedLines;
-}
-
-function runValidation() {
-    const changedLines = getChangedLines();
-
-    if (Object.keys(changedLines).length === 0) {
-        console.log('✅ No hay cambios staged. Se omite validación de TSDoc.');
-        return true;
-    }
+function runValidation(): boolean {
+    const changedLines = getStagedChangedLines();
 
     let validationResult = true;
     let allErrors: string[] = [];
-    let totalErrors = 0;
 
-    for (const [filePath, lines] of Object.entries(changedLines)) {
+    for (const file in changedLines) {
         if (
-            (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || filePath.endsWith('.js') || filePath.endsWith('.jsx')) &&
-            !filePath.includes('scripts/validators/')
-        ) {
-            const errors = validateTSDocFragment(lines);
+            !file.endsWith('.ts') &&
+            !file.endsWith('.tsx') &&
+            !file.endsWith('.js') &&
+            !file.endsWith('.jsx')
+        ) continue;
 
-            if (errors.length > 0) {
-                allErrors.push(`\nArchivo: ${filePath}`);
-                allErrors.push(`Total de errores: ${errors.length}`);
-                allErrors.push(...errors);
-                totalErrors += errors.length;
-                validationResult = false;
-            }
+        if (file.endsWith('tsdoc-validator.ts')) continue; // evitar autovalidar este script
+
+        const fullPath = path.resolve(file);
+        const errors = validateFile(fullPath, changedLines[file]);
+
+        if (errors.length > 0) {
+            allErrors.push(`\nArchivo: ${file}`);
+            allErrors.push(...errors);
+            validationResult = false;
         }
     }
 
     if (!validationResult) {
         console.log('⚠️ Errores encontrados en la validación TSDoc:');
-        allErrors.forEach(error => console.log(error));
-        console.log(`\nTotal de errores: ${totalErrors}`);
+        allErrors.forEach(e => console.log(e));
+        console.log(`\nTotal de errores: ${allErrors.length}`);
     }
 
     return validationResult;
 }
 
-// Ejecutar validación
-const result = runValidation();
-if (!result) {
-    console.error("❌ Validación de TSDoc fallida. Por favor, corrige los problemas de documentación antes de enviar los cambios.");
-    process.exit(1);
-} else {
-    console.log("✅ La validación de TSDoc fue exitosa.");
+// Ejecutar la validación
+if (!runValidation()) {
+    process.exit(1); // Bloquear el push si falla
 }
