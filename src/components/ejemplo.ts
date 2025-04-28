@@ -18,7 +18,11 @@ class Usuario {
      */
     nombre: string;
 
-
+    /**
+     * Correo electrónico del usuario.
+     *
+     * @var {string}
+     */
     correo: string;
 
     /**
