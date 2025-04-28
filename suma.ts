@@ -145,14 +145,7 @@ export class MathService {
         return a * b;
     }
 
-    /**
-     * Divide dos números y devuelve el resultado.
-     *
-     * @param a - Dividendo.
-     * @param b - Divisor.
-     * @returns Resultado de la división de `a` entre `b`.
-     * @throws Error si `b` es igual a cero.
-     */
+
     public divide(a: number, b: number): number {
         if (b === 0) {
             throw new Error('Division by zero is not allowed.');
