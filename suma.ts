@@ -130,13 +130,6 @@ export class MathService {
         return a + b;
     }
 
-    /**
-     * Resta dos números y devuelve el resultado.
-     *
-     * @param a - Número del cual se va a restar.
-     * @param b - Número que se va a restar.
-     * @returns Resultado de la resta de `a` menos `b`.
-     */
     public subtract(a: number, b: number): number {
         return a - b;
     }
