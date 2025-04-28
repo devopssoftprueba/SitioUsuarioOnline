@@ -1,13 +1,14 @@
 import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import rules from './tsdoc-rules';  // Asegúrate de que esta importación sea utilizada
 
 type ChangedLines = Record<string, Set<number>>;
 
 /**
- * Obtiene las líneas modificadas o agregadas en el área de staging.
+ * Obtiene las líneas modificadas de los archivos staged.
  *
- * @returns Registro de archivos con líneas cambiadas.
+ * @returns Un objeto con archivos y sus líneas modificadas.
  */
 function getStagedChangedLines(): ChangedLines {
     const diffOutput = execSync('git diff --staged -U0 --no-color', { encoding: 'utf8' });
@@ -43,63 +44,99 @@ function getStagedChangedLines(): ChangedLines {
 }
 
 /**
- * Valida si existe un bloque de documentación TSDoc encima de una línea de código.
+ * Busca la declaración de clase/metodo/propiedad más cercana hacia arriba.
  *
- * @param lines Contenido del archivo dividido en líneas.
- * @param index Índice de la línea donde está la definición.
- * @returns `true` si encontró documentación arriba, `false` si no.
+ * @param lines - Líneas del archivo.
+ * @param startIndex - Índice desde donde buscar hacia arriba.
+ * @returns El índice de la declaración encontrada, o -1 si no encuentra.
  */
-function hasDocumentationAbove(lines: string[], index: number): boolean {
-    let i = index - 1;
-
-    while (i >= 0) {
-        const line = lines[i].trim();
-        if (line === '') {
-            i--;
-            continue; // saltar líneas vacías
+function findDeclarationLine(lines: string[], startIndex: number): number {
+    for (let i = startIndex; i >= 0; i--) {
+        const trimmed = lines[i].trim();
+        if (
+            trimmed.startsWith('class ') ||
+            trimmed.startsWith('interface ') ||
+            trimmed.startsWith('function ') ||
+            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos
+            trimmed.startsWith('public ') ||
+            trimmed.startsWith('private ') ||
+            trimmed.startsWith('protected ')
+        ) {
+            return i;
         }
-        if (line.startsWith('/**')) {
-            return true; // encontró inicio de TSDoc
-        }
-        if (line.startsWith('//') || line.startsWith('/*')) {
-            return false; // comentario que no es TSDoc
-        }
-        // encontró código real, sin comentarios
-        return false;
     }
-
-    return false;
+    return -1;
 }
 
 /**
- * Valida el archivo verificando que todas las clases, métodos y propiedades nuevas/modificadas tengan documentación.
+ * Valida si una declaración tiene documentación inmediatamente arriba, usando reglas.
  *
- * @param filePath Ruta del archivo.
- * @param changed Líneas cambiadas en el archivo.
+ * @param lines - Líneas del archivo.
+ * @param declarationIndex - Índice donde está la declaración.
+ * @param type - Tipo de declaración (metodo, clase, propiedad).
+ * @returns Lista de errores encontrados.
+ */
+function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] {
+    const previousLineIndex = declarationIndex - 1;
+    if (previousLineIndex < 0) {
+        return [`Error: No hay documentación encima de la declaración de tipo ${type}.`];
+    }
+
+    const trimmedPrev = lines[previousLineIndex].trim();
+    if (!trimmedPrev.startsWith('/**')) {
+        return [`Error: Falta el bloque TSDoc encima de la declaración de tipo ${type}.`];
+    }
+
+    // Reglas específicas de documentación
+    const requiredTags = rules[type]?.requiredTags || [];
+    const missingTags = requiredTags.filter(tag => !trimmedPrev.includes(tag));
+
+    if (missingTags.length > 0) {
+        return [`Error: La declaración de tipo ${type} falta las siguientes etiquetas: ${missingTags.join(', ')}.`];
+    }
+
+    return [];
+}
+
+/**
+ * Valida un archivo verificando documentación correcta en cambios.
+ *
+ * @param filePath - Ruta del archivo.
+ * @param changed - Líneas cambiadas.
  * @returns Lista de errores encontrados.
  */
 function validateFile(filePath: string, changed: Set<number>): string[] {
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
-    let errors: string[] = [];
+    const errors: string[] = [];
 
-    lines.forEach((line, index) => {
-        if (!changed.has(index + 1)) return; // +1 porque git diff empieza en 1
+    const alreadyValidated = new Set<number>();
 
-        const trimmed = line.trim();
+    changed.forEach(lineNumber => {
+        const lineIndex = lineNumber - 1;
 
-        // Detecta métodos, clases o propiedades
-        const isFunction = trimmed.startsWith('function ') || trimmed.includes('function ');
-        const isClass = trimmed.startsWith('class ');
-        const isProperty = (
-            (trimmed.startsWith('public') || trimmed.startsWith('private') || trimmed.startsWith('protected')) &&
-            trimmed.includes(':')
-        );
+        const declarationIndex = findDeclarationLine(lines, lineIndex);
+        if (declarationIndex === -1) return;
 
-        if (isFunction || isClass || isProperty) {
-            if (!hasDocumentationAbove(lines, index)) {
-                errors.push(`${index + 1} | ERROR | [x] Falta documentación encima de ${isFunction ? 'función' : isClass ? 'clase' : 'propiedad'}`);
-            }
+        if (alreadyValidated.has(declarationIndex)) return;
+        alreadyValidated.add(declarationIndex);
+
+        // Determinar tipo de declaración
+        let type: keyof typeof rules = 'function'; // Default
+
+        if (lines[declarationIndex].includes('class')) {
+            type = 'class';
+        } else if (lines[declarationIndex].includes('interface')) {
+            type = 'class'; // Asumir que las interfaces son como clases para la validación
+        } else if (lines[declarationIndex].includes('public') || lines[declarationIndex].includes('private') || lines[declarationIndex].includes('protected')) {
+            type = 'property'; // Asumir que cualquier propiedad va aquí
+        }
+
+        const validationErrors = validateDocumentation(lines, declarationIndex, type);
+        if (validationErrors.length > 0) {
+            const codeLine = lines[declarationIndex].trim();
+            errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`);
+            errors.push(...validationErrors.map(e => `  - ${e}`));
         }
     });
 
@@ -107,15 +144,15 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
 }
 
 /**
- * Ejecuta toda la validación TSDoc.
+ * Ejecuta la validación sobre todos los archivos staged.
  *
- * @returns `true` si pasó toda la validación, `false` si hubo errores.
+ * @returns True si pasa la validación, false si hay errores.
  */
 function runValidation(): boolean {
     const changedLines = getStagedChangedLines();
 
     let validationResult = true;
-    let allErrors: string[] = [];
+    const allErrors: string[] = [];
 
     for (const file in changedLines) {
         if (
@@ -125,7 +162,7 @@ function runValidation(): boolean {
             !file.endsWith('.jsx')
         ) continue;
 
-        if (file.endsWith('tsdoc-validator.ts')) continue; // evitar autovalidar este script
+        if (file.endsWith('tsdoc-validator.ts')) continue; // evita auto-validarse
 
         const fullPath = path.resolve(file);
         const errors = validateFile(fullPath, changedLines[file]);
@@ -138,15 +175,16 @@ function runValidation(): boolean {
     }
 
     if (!validationResult) {
-        console.log('⚠️ Errores encontrados en la validación TSDoc:');
-        allErrors.forEach(e => console.log(e));
+        console.log('⚠️  Errores encontrados en la validación TSDoc:');
+        allErrors.forEach(error => console.log(error));
         console.log(`\nTotal de errores: ${allErrors.length}`);
     }
 
     return validationResult;
 }
 
-// Ejecutar la validación
-if (!runValidation()) {
-    process.exit(1); // Bloquear el push si falla
+// Ejecuta el validador si este archivo es llamado directamente
+if (require.main === module) {
+    const result = runValidation();
+    process.exit(result ? 0 : 1);
 }

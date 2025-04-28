@@ -1,14 +1,14 @@
-// Asegúrate de exportar las reglas correctamente
-const rules = {
-    function: {
-        requiredTags: ['@param', '@returns'],
-    },
+// tsdoc-rules.ts
+
+// Reglas para los tipos de declaraciones
+export default {
     class: {
-        requiredTags: ['@description'],
+        requiredTags: ['@category', '@package', '@author', '@version', '@since', '@description'],
+    },
+    function: {
+        requiredTags: ['@category', '@package', '@author', '@version', '@since', '@param', '@return', '@description'],
     },
     property: {
-        requiredTags: ['@type'],
+        requiredTags: ['@category', '@package', '@author', '@version', '@since', '@var', '@description'],
     },
 };
-
-export default rules; // Usar exportación por defecto

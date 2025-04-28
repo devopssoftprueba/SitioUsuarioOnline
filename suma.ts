@@ -123,11 +123,7 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
     return errors;
 }
 
-/**
- * Ejecuta la validación sobre todos los archivos staged.
- *
- * @returns True si pasa la validación, false si hay errores.
- */
+
 function runValidation(): boolean {
     const changedLines = getStagedChangedLines();
 
