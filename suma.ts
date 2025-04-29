@@ -14,7 +14,7 @@ class ExampleClass {
      * @author Ronald
      * @version 1.0.0
      * @since 2025-04-28
-     * @description Esta propiedad almacena un mensaje de ejemplo que puede ser utilizado en otras partes del código.
+     * @description Esta propiedad almacena a mensaje de ejemplo que puede ser utilizado en otras partes del code.
      */
     exampleProperty: string = 'hola World';
 
