@@ -22,7 +22,7 @@ class ExampleClass {
 }
 
 /**
- * agrego esto en español.
+ * agrego esto en español as.
  *
  * @param radius - El radio del círculo.
  * @returns El área del círculo calculada con la fórmula `π * radius^2`.
