@@ -11,11 +11,12 @@ import rules from './tsdoc-rules';
 type ChangedLines = Record<string, Set<number>>;
 
 /**
- * Log with timestamp for debugging
+ * Logs a debug message with timestamp
  *
  * @param message - The message to log
+ * @remarks This function helps track the validator's execution flow
+ * @public
  */
-// Función que imprime mensajes de debug con timestamp para facilitar la depuración
 function logDebug(message: string): void {
     // Imprime un mensaje con formato [timestamp] mensaje
     console.log(`[${new Date().toISOString()}] ${message}`);
@@ -25,11 +26,13 @@ function logDebug(message: string): void {
 logDebug('🔍 TSDoc validator running...');
 
 /**
- * Obtiene las líneas modificadas de los archivos en el push actual.
+ * Gets the changed lines from files in the current push
  *
- * @returns Un objeto con archivos y sus líneas modificadas.
+ * @returns An object with files and their modified lines
+ * @remarks This function uses git diff to identify changes between branches
+ * @throws Will throw an error if git commands fail
+ * @public
  */
-// Función que detecta las líneas modificadas en los archivos del push actual
 function getChangedLines(): ChangedLines {
     try {
         // Obtiene el nombre de la rama actual ejecutando un comando git
@@ -148,29 +151,35 @@ function getChangedLines(): ChangedLines {
 }
 
 /**
- * Determina el tipo de declaración basándose en la línea de código.
+ * Determines the declaration type based on code line
  *
- * @param line - Línea de código a analizar
- * @returns El tipo de declaración identificado
+ * @param line - Code line to analyze
+ * @returns The identified declaration type
+ * @remarks Uses regex patterns to identify classes, functions, and properties
+ * @public
  */
-// Función que analiza una línea de código y determina qué tipo de declaración es (clase, función o propiedad)
 function determineDeclarationType(line: string): keyof typeof rules {
     // Elimina espacios al inicio y final de la línea
     const trimmed = line.trim();
 
-    // Si la línea comienza con 'class' o 'interface', es una declaración de clase
-    if (trimmed.startsWith('class ') || trimmed.startsWith('interface ')) {
+    // Si la línea comienza con 'class', 'interface', 'enum' o 'namespace', es una declaración de clase/módulo
+    if (
+        trimmed.startsWith('class ') ||
+        trimmed.startsWith('interface ') ||
+        trimmed.startsWith('enum ') ||
+        trimmed.startsWith('namespace ')
+    ) {
         return 'class';
     } else if (
         // Si la línea comienza con 'function' o es un metodo (con o sin async, con o sin modificadores de acceso)
         trimmed.startsWith('function ') ||
-        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
-        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/)
+        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*(?::\s*\w+\s*)?(?:=>\s*|\{)/) ||
+        trimmed.match(/^(?:public|private|protected|abstract|static)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*(?::\s*\w+\s*)?(?:=>\s*|\{)/)
     ) {
         return 'function';
     } else if (
         // Si la línea es una propiedad (con o sin modificadores de acceso, con: o =)
-        trimmed.match(/^(?:public|private|protected)?\s*[a-zA-Z0-9_]+\s*[:=]/) ||
+        trimmed.match(/^(?:public|private|protected|readonly|static)?\s*[a-zA-Z0-9_]+\s*(?::\s*\w+)?\s*[:=]/) ||
         trimmed.match(/^(?:readonly|static)\s+[a-zA-Z0-9_]+/)
     ) {
         return 'property';
@@ -181,13 +190,14 @@ function determineDeclarationType(line: string): keyof typeof rules {
 }
 
 /**
- * Busca la declaración de clase/metodo/propiedad más cercana hacia arriba.
+ * Finds the nearest class/method/property declaration going upward
  *
- * @param lines - Líneas del archivo.
- * @param startIndex - Índice desde donde buscar hacia arriba.
- * @returns El índice de la declaración encontrada y su tipo, o null si no encuentra.
+ * @param lines - File lines
+ * @param startIndex - Index from which to search upward
+ * @returns The index of the found declaration and its type, or null if none found
+ * @remarks Helps identify the declaration associated with the current line
+ * @public
  */
-// Función que busca la declaración más cercana (clase, metodo o propiedad) analizando hacia arriba desde una línea dada
 function findDeclarationLine(lines: string[], startIndex: number): { index: number; type: keyof typeof rules } | null {
     // Recorre las líneas desde el índice inicial hacia arriba
     for (let i = startIndex; i >= 0; i--) {
@@ -197,12 +207,16 @@ function findDeclarationLine(lines: string[], startIndex: number): { index: numb
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
+            trimmed.startsWith('enum ') ||
+            trimmed.startsWith('namespace ') ||
             trimmed.startsWith('function ') ||
-            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos
+            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*(?::\s*\w+\s*)?(?:=>\s*|\{)/) || // métodos
             trimmed.startsWith('public ') ||
             trimmed.startsWith('private ') ||
             trimmed.startsWith('protected ') ||
-            trimmed.match(/^[a-zA-Z0-9_]+\s*[:=]/) // propiedades
+            trimmed.startsWith('readonly ') ||
+            trimmed.startsWith('static ') ||
+            trimmed.match(/^[a-zA-Z0-9_]+\s*(?::\s*\w+)?\s*[:=]/) // propiedades
         ) {
             // Si encuentra una declaración, devuelve su índice y tipo
             return {
@@ -216,14 +230,55 @@ function findDeclarationLine(lines: string[], startIndex: number): { index: numb
 }
 
 /**
- * Verifica si existe un bloque de documentación TSDoc válido para una declaración.
+ * Checks if the documentation is written in English
  *
- * @param lines - Líneas del archivo
- * @param declarationIndex - Índice donde está la declaración
- * @param type - Tipo de declaración
- * @returns Lista de errores encontrados
+ * @param commentBlock - The entire documentation comment block
+ * @returns An error message if Spanish is detected, or empty string if it passes
+ * @remarks Uses a simple word frequency detection to identify Spanish documentation
+ * @public
  */
-// Función que verifica si una declaración tiene la documentación TSDoc correcta
+function validateLanguage(commentBlock: string): string {
+    // Si no se requiere validación en inglés, retorna vacío
+    if (!rules.enforceEnglish) {
+        return '';
+    }
+
+    // Lista de palabras comunes en español para detectar
+    const spanishWords = rules.spanishWords || [];
+
+    // Normaliza el texto para análisis
+    const normalizedText = commentBlock.toLowerCase();
+
+    // Cuenta cuántas palabras en español aparecen en el comentario
+    let spanishWordCount = 0;
+    for (const word of [...spanishWords]) {
+        // Busca la palabra con límites de palabra (no como parte de otras palabras)
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        const matches = normalizedText.match(regex);
+        if (matches) {
+            spanishWordCount += matches.length;
+        }
+    }
+
+    // Si hay más de 3 palabras en español, es probable que la documentación no esté en inglés
+    if (spanishWordCount > 3) {
+        return 'Error: Documentation appears to be in Spanish. Please write documentation in English.';
+    }
+
+    return '';
+}
+
+/**
+ * Verifies if a valid TSDoc documentation block exists for a declaration
+ *
+ * @param lines - File lines
+ * @param declarationIndex - Index where the declaration is located
+ * @param type - Type of declaration
+ * @returns List of errors found
+ * @remarks Checks for required tags and proper format according to TSDoc standard
+ * @throws Will not throw but returns errors as strings
+ * @public
+ */
 function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] {
     // Busca hacia arriba para encontrar un bloque de comentarios
     let i = declarationIndex - 1;
@@ -235,7 +290,7 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 
     // Si no hay línea previa o no es un cierre de comentario, indica error
     if (i < 0 || lines[i].trim() !== '*/') {
-        return [`Error: Falta el bloque TSDoc encima de la declaración de tipo ${type}.`];
+        return [`Error: Missing TSDoc block above ${type} declaration.`];
     }
 
     // Busca el inicio del bloque de comentarios (/**) retrocediendo líneas
@@ -246,34 +301,69 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 
     // Si no encuentra el inicio del comentario, indica error
     if (startCommentIndex < 0) {
-        return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de tipo ${type}.`];
+        return [`Error: Found comment closing without opening for ${type} declaration.`];
     }
 
     // Extrae el bloque completo de comentarios uniendo todas las líneas
     const commentBlock = lines.slice(startCommentIndex, i + 1).join('\n');
 
+    // Lista para almacenar todos los errores encontrados
+    const errors: string[] = [];
+
+    // Verifica el idioma (inglés)
+    const languageError = validateLanguage(commentBlock);
+    if (languageError) {
+        errors.push(languageError);
+    }
+
     // Obtiene las etiquetas requeridas para este tipo de declaración desde las reglas
-    const requiredTags = rules[type]?.requiredTags || [];
+    const typeRule = rules[type] as { requiredTags: readonly string[] } | undefined;
+    const requiredTags = typeRule?.requiredTags || [];
+
     // Verifica qué etiquetas requeridas faltan en el bloque de comentarios
     const missingTags = requiredTags.filter(tag => !commentBlock.includes(tag));
 
     // Si faltan etiquetas, indica cuáles
     if (missingTags.length > 0) {
-        return [`Error: La declaración de tipo ${type} falta las siguientes etiquetas: ${missingTags.join(', ')}.`];
+        errors.push(`Error: The ${type} declaration is missing the following required tags: ${missingTags.join(', ')}.`);
     }
 
-    // Si la documentación es válida, devuelve un array vacío (sin errores)
-    return []; // La documentación es válida
+    // Verifica formato según TSDoc
+
+    // Verifica que la primera línea tenga un resumen (summary)
+    const lines_after_opening = commentBlock.split('\n').slice(1);
+    const first_content_line = lines_after_opening.find(line => line.trim() !== '');
+
+    if (!first_content_line || first_content_line.trim().startsWith('*') && first_content_line.trim().substring(1).trim().startsWith('@')) {
+        errors.push(`Error: TSDoc requires a summary line at the beginning of the documentation block for ${type} declaration.`);
+    }
+
+    // Busca etiquetas incorrectas o no estándar en TSDoc
+    const nonStandardTags = [
+        '@category', '@package', '@author', '@var', '@version',
+        // Estas etiquetas no son parte del estándar TSDoc
+    ];
+
+    for (const tag of nonStandardTags as string[]) {
+        if (commentBlock.includes(tag)) {
+            errors.push(`Warning: The tag ${tag} is not part of the standard TSDoc. Consider using appropriate TSDoc tags instead.`);
+        }
+    }
+
+    // Si no hay errores, la documentación es válida
+    return errors;
 }
 
 /**
- * Válida un archivo verificando documentación correcta en cambios.
+ * Validates a file by checking for proper documentation on changed lines
  *
- * @param filePath - Ruta del archivo.
- * @param changed - Líneas cambiadas.
- * @returns Lista de errores encontrados.
+ * @param filePath - Path to the file
+ * @param changed - Set of changed line numbers
+ * @returns List of errors found
+ * @remarks Processes each changed line to find its declaration and validate docs
+ * @throws May return file reading errors as error messages
+ * @public
  */
-// Función que valida un archivo específico, verificando la documentación de las líneas modificadas
 function validateFile(filePath: string, changed: Set<number>): string[] {
     try {
         // Verifica si el archivo existe
@@ -322,7 +412,7 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
             if (validationErrors.length > 0) {
                 // Añade la línea de código donde está el error
                 const codeLine = lines[declarationIndex].trim();
-                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`);
+                errors.push(`Error on line ${declarationIndex + 1}: ${codeLine}`);
                 // Añade los mensajes de error con formato
                 errors.push(...validationErrors.map(e => `  - ${e}`));
             }
@@ -339,11 +429,13 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
 }
 
 /**
- * Ejecuta la validación sobre todos los archivos con cambios.
+ * Executes validation on all files with changes
  *
- * @returns True si pasa la validación, false si hay errores.
+ * @returns True if validation passes, false if there are errors
+ * @remarks Main function that orchestrates the entire validation process
+ * @throws May log errors but always returns a boolean
+ * @public
  */
-// Función principal que ejecuta la validación en todos los archivos modificados
 function runValidation(): boolean {
     try {
         // Obtiene las líneas modificadas de todos los archivos
@@ -385,7 +477,7 @@ function runValidation(): boolean {
 
             // Si hay errores, los agrega a la lista general
             if (errors.length > 0) {
-                allErrors.push(`\nArchivo: ${file}`);
+                allErrors.push(`\nFile: ${file}`);
                 allErrors.push(...errors);
                 // Marca la validación como fallida
                 validationResult = false;
@@ -394,21 +486,21 @@ function runValidation(): boolean {
 
         // Si la validación falló, muestra los errores
         if (!validationResult) {
-            console.log('\n⚠️  Errores encontrados en la validación TSDoc:');
+            console.log('\n⚠️  TSDoc validation errors found:');
             allErrors.forEach(error => console.log(error));
-            console.log(`\nTotal de errores: ${allErrors.length}`);
-            console.log('\nAsegúrate de documentar correctamente todas las nuevas declaraciones.');
+            console.log(`\nTotal errors: ${allErrors.length}`);
+            console.log('\nPlease ensure all declarations have proper English TSDoc documentation.');
         } else {
             // Si la validación fue exitosa, registra un mensaje de éxito
-            logDebug('✅ Validación TSDoc completada sin errores.');
+            logDebug('✅ TSDoc validation completed successfully with no errors.');
         }
 
         // Devuelve el resultado de la validación
         return validationResult;
     } catch (error) {
         // Si ocurre algún error durante la validación, lo registra y falla la validación
-        logDebug(`Error en la validación: ${error}`);
-        console.error(`\n⚠️  Error en la validación TSDoc: ${error}`);
+        logDebug(`Validation error: ${error}`);
+        console.error(`\n⚠️  TSDoc validation error: ${error}`);
         return false; // En caso de error, bloqueamos el push
     }
 }
