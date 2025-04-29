@@ -22,7 +22,7 @@ class ExampleClass {
 }
 
 /**
- * Calcula el área de un círculo dado su radio.
+ * agrego esto en español.
  *
  * @param radius - El radio del círculo.
  * @returns El área del círculo calculada con la fórmula `π * radius^2`.
