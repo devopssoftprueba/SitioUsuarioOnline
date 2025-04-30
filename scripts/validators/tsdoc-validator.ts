@@ -150,34 +150,33 @@ function findDeclarationLine(
     for (let i = startIndex; i >= 0; i--) {
         const trimmed = lines[i].trim();
 
-        // --- Nuevas líneas a ignorar ---
-        // 1) Apertura de bloque /**…
+        // Ignorar apertura de bloque de comentario /**…
         if (trimmed.startsWith('/**')) {
             continue;
         }
-        // 2) Línea interior de comentario (* …)
+        // Ignorar líneas interiores de comentario (* …)
         if (trimmed.startsWith('*')) {
             continue;
         }
-        // 3) Cierre de bloque */
+        // Ignorar cierre de bloque */
         if (trimmed === '*/') {
             continue;
         }
-        // 4) Líneas en blanco
+        // Ignorar líneas en blanco
         if (trimmed === '') {
             continue;
         }
 
-        // --- Declaraciones válidas ---
+        // Si es una declaración, la devolvemos
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
             trimmed.startsWith('function ') ||
-            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) || // metodo sin modificador
+            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) ||
             trimmed.startsWith('public ') ||
             trimmed.startsWith('private ') ||
             trimmed.startsWith('protected ') ||
-            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed) // propiedad
+            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed)
         ) {
             return {
                 index: i,
@@ -185,8 +184,7 @@ function findDeclarationLine(
             };
         }
 
-        // 5) Cualquier otra línea de código no declarativa: paro de buscar
-        break;
+        // Cualquier otra línea de código: simplemente seguimos subiendo
     }
 
     return null;
