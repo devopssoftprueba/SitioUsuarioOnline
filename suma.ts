@@ -1,39 +1,57 @@
-
+/**
+ * ExampleClass demonstrates basic structure with a documented method and property.
+ *
+ * @category Example
+ * @package example
+ * @author Ronald
+ * @version 1.0.0
+ * @since 2025-04-28
+ * @description This class includes a sample method and a property to illustrate proper documentation using TSDoc.
+ */
 class ExampleClass {
- 
+    /**
+     * Returns a formatted string with both input parameters.
+     *
+     * @param param12 - A string parameter to be displayed in the result.
+     * @param param2 - A numeric parameter to be displayed in the result.
+     * @returns A formatted string including both parameters.
+     * @category Example
+     * @package example
+     * @author Ronald
+     * @version 1.0.0
+     * @since 2025-04-28
+     * @description This method returns a formatted string using the provided parameters.
+     */
     exampleMethod(param12: string, param2: number): string {
         return `Param12: ${param12}, Param2: ${param2}`;
     }
 
     /**
-     * Propiedad de ejemplo que almacena un mensaje.
+     * Example property that stores a message.
      *
-     * @var {string} exampleProperty - Mensaje de ejemplo.
-     * @category Ejemplo
-     * @package ejemplo
+     * @var {string} exampleProperty - Message to be used in other parts of the code.
+     * @category Example
+     * @package example
      * @author Ronald
      * @version 1.0.0
      * @since 2025-04-28
-     * @description Esta propiedad almacena a mensaje de ejemplo que puede ser utilizado en otras partes del code.
+     * @description This property stores an example message that can be used elsewhere in the code.
      */
-    exampleProperty: string = 'hola World';
-
-
+    exampleProperty: string = 'Hello World';
 }
 
 /**
- * agrego esto en español as.
+ * Calculates the area of a circle using the radius provided.
  *
- * @param radius - El radio del círculo.
- * @returns El área del círculo calculada con la fórmula `π * radius^2`.
+ * @param radius - The radius of the circle.
+ * @returns The area of the circle calculated using the formula `π * radius^2`.
  * @category Math
  * @package Geometry
  * @author Ronald
  * @version 1.0.0
  * @since 2025-04-28
- * @description Esta función toma el radio de un círculo y devuelve su área.
+ * @description This function takes the radius of a circle and returns its area.
  */
 function calculateCircleArea(radius: number): number {
     return Math.PI * Math.pow(radius, 2);
 }
-
