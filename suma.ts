@@ -29,7 +29,7 @@ class ExampleClass {
     /**
      * Example property that stores a message.
      *
-     * @var {string} exampleProperty - Message to be used in other parts of the code.
+     * @var {string} exampleProperty - pongo este mensaje en español.
      */
     exampleProperty: string = 'Hello World';
 }
