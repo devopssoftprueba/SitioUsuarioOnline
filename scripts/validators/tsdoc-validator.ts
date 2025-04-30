@@ -41,7 +41,7 @@ function getChangedLines(): ChangedLines {
 
         let diffCommand;
         if (remoteExists) {
-            diffCommand = `git diff origin/${currentBranch}..HEAD -U0 --no-color`;
+            diffCommand = `git diff origin/${currentBranch}..HEAD -U3 --no-color`;
             logDebug(`Comparando con rama remota: origin/${currentBranch}`);
         } else {
             let baseBranch = 'main';
@@ -56,14 +56,14 @@ function getChangedLines(): ChangedLines {
                         execSync('git rev-parse --verify origin/develop', { stdio: 'pipe' });
                         baseBranch = 'develop';
                     } catch (e) {
-                        diffCommand = 'git diff --staged -U0 --no-color';
+                        diffCommand = 'git diff --staged -U3 --no-color';
                         logDebug('No se encontró rama remota. Usando cambios preparados (staged).');
                     }
                 }
             }
 
             if (!diffCommand) {
-                diffCommand = `git diff origin/${baseBranch}..HEAD -U0 --no-color`;
+                diffCommand = `git diff origin/${baseBranch}..HEAD -U3 --no-color`;
                 logDebug(`Rama nueva detectada. Comparando con ${baseBranch}.`);
             }
         }
