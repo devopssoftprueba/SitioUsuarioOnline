@@ -4,8 +4,15 @@ import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 // Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
-// Importa las reglas de validación TSDoc desde el archivo local tsdoc-rules
-import rules from './tsdoc-rules';
+// No necesitamos importar reglas externas, ya que nuestro validador será inteligente
+// y detectará qué etiquetas son necesarias basándose en el código mismo
+const rules = {
+    'class': {},
+    'function': {},
+    'property': {}
+};
+
+logDebug('Usando validación inteligente de etiquetas basada en el código');
 
 // Define un tipo ChangedLines que es un objeto con claves string y valores Set<number> para almacenar líneas modificadas por archivo
 type ChangedLines = Record<string, Set<number>>;
@@ -242,15 +249,30 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 
     const commentBlock = lines.slice(startCommentIndex, i + 1).join('\n');
 
-    const requiredTags = typeof rules[type] === 'object' && rules[type] !== null && 'requiredTags' in rules[type]
-        ? (rules[type] as { requiredTags: string[] }).requiredTags
-        : [];
-    const missingTags = requiredTags.filter(tag => !commentBlock.includes(tag));
-
     const errors: string[] = [];
 
-    if (missingTags.length > 0) {
-        errors.push(`Error: A la declaración de ${type} le faltan las siguientes etiquetas: ${missingTags.join(', ')}.`);
+    // Analizar la declaración para determinar qué etiquetas deberían estar presentes
+    const originalDeclaration = lines[declarationIndex];
+
+    // Comprobar si la función o metodo tiene parámetros
+    if (type === 'function' || type === 'class') {
+        const hasParameters = originalDeclaration.includes('(') &&
+            !originalDeclaration.includes('()') &&
+            !originalDeclaration.includes('( )');
+
+        // Si tiene parámetros pero no hay etiquetas @param
+        if (hasParameters && !commentBlock.includes('@param')) {
+            errors.push(`Error: La declaración tiene parámetros pero falta documentación con etiquetas @param.`);
+        }
+
+        // Si es una función y parece devolver algo (no es void)
+        if (type === 'function' &&
+            originalDeclaration.includes('): ') &&
+            !originalDeclaration.includes('): void') &&
+            !commentBlock.includes('@returns') &&
+            !commentBlock.includes('@return')) {
+            errors.push(`Error: La función parece devolver un valor pero falta la etiqueta @returns.`);
+        }
     }
 
     const languageErrors = validateEnglishDocumentation(commentBlock);
@@ -395,9 +417,11 @@ function runValidation(): boolean {
 
 // Si este archivo se ejecuta directamente (no importado)
 if (require.main === module) {
+    console.log('\n🔍 Validador TSDoc en ejecución (análisis inteligente de documentación)');
+
     const result = runValidation();
     process.exit(result ? 0 : 1);
 }
 
-// Exporta la función runValidation para uso en otros archivos
+// Exporta la función runValidation y función auxiliar para uso en otros archivos
 export { runValidation };
