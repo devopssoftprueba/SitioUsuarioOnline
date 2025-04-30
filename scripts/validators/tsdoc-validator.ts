@@ -202,7 +202,16 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
         'para', 'por', 'con', 'sin', 'porque', 'como', 'según', 'cuando',
         'si', 'pero', 'aunque', 'mientras', 'hasta', 'desde', 'entre',
         'función', 'archivo', 'línea', 'código', 'método', 'clase',
-        'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna'
+        'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna',
+        // —— palabras nuevas añadidas ——
+        'pongo',    // de “@returns pongo…”
+        'esto',     // primera persona & pronombre
+        'aquí',     // en caso de “aquí”
+        'ese', 'esa','eso', // pronombres comunes
+        'español',  // para detectar la palabra “español”
+        'área',     // con tilde
+        'círculo',  // con tilde
+        'fórmula'   // con tilde
     ];
 
     const cleanedComment = commentBlock
