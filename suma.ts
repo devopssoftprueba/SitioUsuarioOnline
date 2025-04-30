@@ -30,12 +30,6 @@ class ExampleClass {
      * Example property that stores a message.
      *
      * @var {string} exampleProperty - Message to be used in other parts of the code.
-     * @category Example
-     * @package example
-     * @author Ronald
-     * @version 1.0.0
-     * @since 2025-04-28
-     * @description This property stores an example message that can be used elsewhere in the code.
      */
     exampleProperty: string = 'Hello World';
 }
