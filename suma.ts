@@ -44,7 +44,7 @@ class ExampleClass {
  * Calculates the area of a circle using the radius provided.
  *
  * @param radius - The radius of the circle.
- * @returns pongo esto en español aqui debe entrar al cambio hola.
+ * @returns pongo se cambia a español.
  * @category Math
  * @package Geometry
  * @author Ronald
