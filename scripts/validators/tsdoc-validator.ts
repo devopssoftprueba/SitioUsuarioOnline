@@ -284,7 +284,7 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 }
 
 /**
- * Valida un archivo verificando la documentación correcta en los cambios.
+ * Válida un archivo verificando la documentación correcta en los cambios.
  *
  * @param filePath - Ruta del archivo.
  * @param changed - Líneas cambiadas.
@@ -326,7 +326,7 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
             }
         });
 
-        // Segunda pasada: Valida cada declaración única encontrada
+        // Segunda pasada: Válida cada declaración única encontrada
         declarations.forEach(({ index: declarationIndex, type }) => {
             logDebug(`Validando ${type} en línea ${declarationIndex + 1} en ${filePath}`);
 
