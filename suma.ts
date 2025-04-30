@@ -1,56 +1,56 @@
 /**
- * ExampleClass demonstrates basic structure with a documented method and property.
+ * ExampleClass demuestra la estructura básica con un metodo y una propiedad documentados.
  *
- * @category Example
- * @package example
+ * @category Ejemplo
+ * @package ejemplo
  * @author Ronald
  * @version 1.0.0
  * @since 2025-04-28
- * @description This class includes a sample method and a property to illustrate proper documentation using TSDoc.
+ * @description Esta clase incluye un metodo de ejemplo y una propiedad para ilustrar la documentación adecuada usando TSDoc.
  */
 class ExampleClass {
     /**
-     * Returns a formatted string with both input parameters.
+     * Devuelve una cadena formateada con ambos parámetros de entrada.
      *
-     * @param param12 - A string parameter to be displayed in the result.
-     * @param param2 - A numeric parameter to be displayed in the result.
-     * @returns A formatted string including both parameters.
-     * @category Example
-     * @package example
+     * @param param12 - Un parámetro de tipo cadena que se mostrará en el resultado.
+     * @param param2 - Un parámetro numérico que se mostrará en el resultado.
+     * @returns Una cadena formateada que incluye ambos parámetros.
+     * @category Ejemplo
+     * @package ejemplo
      * @author Ronald
      * @version 1.0.0
      * @since 2025-04-28
-     * @description This method returns a formatted string using the provided parameters.
+     * @description Este metodo devuelve una cadena formateada usando los parámetros proporcionados.
      */
     exampleMethod(param12: string, param2: number): string {
         return `Param12: ${param12}, Param2: ${param2}`;
     }
 
     /**
-     * Example property that stores a message.
+     * Propiedad de ejemplo que almacena un mensaje.
      *
-     * @var {string} exampleProperty - Message to be used in other parts of the code.
-     * @category Example
-     * @package example
+     * @var {string} exampleProperty - Mensaje que se utilizará en otras partes del código.
+     * @category Ejemplo
+     * @package ejemplo
      * @author Ronald
      * @version 1.0.0
      * @since 2025-04-28
-     * @description This property stores an example message that can be used elsewhere in the code.
+     * @description Esta propiedad almacena un mensaje de ejemplo que puede usarse en otras partes del código.
      */
     exampleProperty: string = 'Hello World';
 }
 
 /**
- * Calculates the area of a circle using the radius provided.
+ * Calcula el área de un círculo usando el radio proporcionado.
  *
- * @param radius - The radius of the circle.
- * @returns el area del circulo se calcula utilizando la fórmula de pi, cambio aqui, hola hola.
- * @category Math
- * @package Geometry
+ * @param radius - El radio del círculo.
+ * @returns El área del círculo se calcula utilizando la fórmula de π por radio al cuadrado.
+ * @category Matemáticas
+ * @package Geometría
  * @author Ronald
  * @version 1.0.0
  * @since 2025-04-28
- * @description This function takes the radius of a circle and returns its area.
+ * @description Esta función recibe el radio de un círculo y devuelve su área.
  */
 function calculateCircleArea(radius: number): number {
     return Math.PI * Math.pow(radius, 2);
