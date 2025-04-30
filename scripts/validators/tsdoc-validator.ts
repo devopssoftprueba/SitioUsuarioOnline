@@ -143,25 +143,52 @@ function determineDeclarationType(line: string): keyof typeof rules {
  * @param startIndex - Índice desde donde buscar hacia arriba.
  * @returns El índice de la declaración encontrada y su tipo, o null si no se encuentra.
  */
-function findDeclarationLine(lines: string[], startIndex: number): { index: number; type: keyof typeof rules } | null {
+function findDeclarationLine(
+    lines: string[],
+    startIndex: number
+): { index: number; type: keyof typeof rules } | null {
     for (let i = startIndex; i >= 0; i--) {
         const trimmed = lines[i].trim();
+
+        // 1) Ignora líneas de comentario interior (asterisco + espacio)
+        if (trimmed.startsWith('*')) {
+            continue;
+        }
+
+        // 2) Ignora el cierre de bloque de comentario
+        if (trimmed === '*/') {
+            continue;
+        }
+
+        // 3) Ignora líneas en blanco
+        if (trimmed === '') {
+            continue;
+        }
+
+        // 4) Si es una declaración, la devolvemos
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
             trimmed.startsWith('function ') ||
-            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos
+            // métodos sin modificador
+            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+            // con visibilidad
             trimmed.startsWith('public ') ||
             trimmed.startsWith('private ') ||
             trimmed.startsWith('protected ') ||
-            trimmed.match(/^[a-zA-Z0-9_]+\s*[:=]/) // propiedades
+            // propiedades
+            trimmed.match(/^[a-zA-Z0-9_]+\s*[:=]/)
         ) {
             return {
                 index: i,
                 type: determineDeclarationType(trimmed)
             };
         }
+
+        // 5) Si encontramos cualquier otra línea de código, dejamos de buscar
+        break;
     }
+
     return null;
 }
 
