@@ -44,7 +44,7 @@ class ExampleClass {
  * Calculates the area of a circle using the radius provided.
  *
  * @param radius - The radius of the circle.
- * @returns el area del circulo se calcula utilizando la fórmula de pi, hola.
+ * @returns el area del circulo se calcula utilizando la fórmula de pi, cambio aqui.
  * @category Math
  * @package Geometry
  * @author Ronald
