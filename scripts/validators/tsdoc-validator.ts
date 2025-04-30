@@ -200,13 +200,34 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
  * @returns Lista de errores encontrados
  */
 function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] {
+    // Busca hacia atrás saltando espacios en blanco para encontrar un bloque de comentarios
     let i = declarationIndex - 1;
+    let foundComment = false;
 
-    while (i >= 0 && lines[i].trim() === '') {
+    // Búsqueda más tolerante: permite hasta 5 líneas en blanco entre la declaración y el comentario
+    const MAX_BLANK_LINES = 5;
+    let blankLineCount = 0;
+
+    while (i >= 0) {
+        const trimmedLine = lines[i].trim();
+
+        if (trimmedLine === '') {
+            blankLineCount++;
+            if (blankLineCount > MAX_BLANK_LINES) {
+                // Si hay demasiadas líneas en blanco, consideramos que no hay documentación relacionada
+                break;
+            }
+        } else if (trimmedLine === '*/') {
+            foundComment = true;
+            break;
+        } else {
+            // Si encontramos una línea no vacía que no es el fin de un comentario, no hay documentación
+            break;
+        }
         i--;
     }
 
-    if (i < 0 || lines[i].trim() !== '*/') {
+    if (!foundComment) {
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
     }
 
