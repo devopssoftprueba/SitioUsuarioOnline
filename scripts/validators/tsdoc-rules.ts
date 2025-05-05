@@ -46,18 +46,6 @@ const rules = {
      */
     enforceEnglish: true,
 
-    /**
-     * List of common Spanish words to detect non-English documentation
-     * @remarks Used to identify Spanish text in documentation blocks
-     * @public
-     * @defaultValue Array of Spanish words
-     */
-    spanishWords: [
-        'para', 'como', 'este', 'esta', 'estos', 'estas', 'función', 'método', 'clase',
-        'objeto', 'archivo', 'valor', 'variable', 'propiedad', 'retorna', 'devuelve',
-        'utiliza', 'permite', 'contiene', 'obtiene', 'recibe', 'cuando', 'donde',
-        'porque', 'ejemplo', 'datos', 'tiempo', 'usuario', 'número', 'lista', 'mensaje'
-    ]
 };
 
 // Exportamos con type assertion para mantener compatibilidad con el código existente
