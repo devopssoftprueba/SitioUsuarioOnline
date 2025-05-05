@@ -383,7 +383,7 @@ function runValidation(): boolean { // Ejecuta la validación de TSDoc para arch
                 continue; // Salta al siguiente archivo
             }
 
-            if (file.endsWith('tsdoc-validator.ts') || file.includes('node_modules/')) { // Evita validar el propio validador o archivos de node_modules
+            if (file.endsWith('tsdoc-validator.ts') || file.includes('node_modules/') || file.includes('tsdoc-rules/')) { // Evita validar el propio validador o archivos de node_modules
                 continue;
             }
 
