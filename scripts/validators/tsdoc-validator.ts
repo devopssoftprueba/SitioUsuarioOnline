@@ -411,11 +411,20 @@ function runValidation(): boolean { // Ejecuta la validación de TSDoc para arch
 
             const errors = validateFile(fullPath, changedLines[file]); // Ejecuta la validación del archivo con base en sus líneas modificadas
 
-            if (errors.length > 0) { // Sí hay errores en ese archivo
-                errorsByFile[file] = errors; // Guarda los errores asociados al archivo
-                totalErrors += errors.length; // Suma los errores al total
-                validationResult = false; // Marca que hubo errores
+            if (errors.length > 0) {
+                // Filtra errores reales, excluyendo mensajes informativos
+                const realErrors = errors.filter(err => !err.includes('Archivo eliminado (informativo)'));
+
+                if (realErrors.length > 0) {
+                    errorsByFile[file] = realErrors; // Solo guarda errores reales
+                    totalErrors += realErrors.length;
+                    validationResult = false;
+                } else {
+                    // Si solo hubo mensajes informativos, también los mostramos
+                    errorsByFile[file] = errors;
+                }
             }
+
         }
 
         if (!validationResult) {  // Si hubo errores de documentación
