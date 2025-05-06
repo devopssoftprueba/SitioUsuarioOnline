@@ -39,7 +39,7 @@ class Usuario {
     /**
      * Metodo para saludar al usuario.
      *
-     * @returns {string} Un saludo dirigido al usuario.
+     * @returns {string} Un saludo dirigido al usuario .
      */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
