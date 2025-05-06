@@ -4,12 +4,20 @@ import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 // Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
-// No necesitamos importar reglas externas, ya que nuestro validador será inteligente
-// y detectará qué etiquetas son necesarias basándose en el código mismo
-const rules = {
-    'class': {},
-    'function': {},
-    'property': {}
+
+const rules = { //objeto en el que defino las reglas que utilizará el script para realizar la validación.
+    'class': {
+        requiredTags: ['@description'],
+        optionalTags: ['@example', '@remarks', '@deprecated']
+    },
+    'function': {
+        requiredTags: ['@param', '@returns'],
+        optionalTags: ['@example', '@throws', '@remarks', '@deprecated']
+    },
+    'property': {
+        requiredTags: ['@description'],
+        optionalTags: ['@defaultValue', '@remarks', '@deprecated']
+    }
 };
 
 logDebug('Usando validación inteligente de etiquetas basada en el código');
@@ -197,6 +205,7 @@ function findDeclarationLine( // Función que busca hacia arriba desde una líne
  * @returns Array de errores si no está en inglés, array vacío si es válido
  */
 function validateEnglishDocumentation(commentBlock: string): string[] { // Función que válida que un bloque de comentario esté redactado en inglés, detectando palabras en español. Retorna errores si encuentra contenido en español.
+
     const spanishWords = [ //glosario de palabras auxiliares para detectar que la documentación está en español.
         'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
         'para', 'por', 'con', 'sin', 'porque', 'como', 'según', 'cuando',
@@ -232,7 +241,8 @@ function validateEnglishDocumentation(commentBlock: string): string[] { // Funci
  * @param type - Tipo de declaración
  * @returns Lista de errores encontrados
  */
-function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] { // Válida si existe un bloque de documentación TSDoc antes de una declaración (función, clase, etc.), revisa que esté en inglés y que incluya etiquetas necesarias como @param y @returns si corresponde.
+function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] { // Valida que exista un bloque de documentación TSDoc antes de una declaración dada, verificando idioma y etiquetas como @param y @returns si aplican.
+
 
     let i = declarationIndex - 1; // Inicializa 'i' para comenzar a buscar desde la línea anterior a la declaración
     let foundComment = false; // Bandera que indica si se encontró un bloque de comentario válido
@@ -261,8 +271,8 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`]; // Devuelve un error indicando que falta documentación
     }
 
-    let startCommentIndex = i; // Establece el índice inicial del comentario en la posición del cierre encontrado
-    while (startCommentIndex >= 0 && !lines[startCommentIndex].trim().startsWith('/**')) { // Bucle para buscar hacia atrás hasta encontrar la apertura del comentario y Verificar si la línea inicia el bloque de comentario
+    let startCommentIndex = i; // Marca el índice del cierre del bloque de comentario ('*/') para luego buscar el inicio ('/**') hacia arriba del código
+    while (startCommentIndex >= 0 && !lines[startCommentIndex].trim().startsWith('/**')) { // Busca hacia atrás hasta encontrar la apertura del bloque de comentario ('/**')
         startCommentIndex--;  // Retrocede una línea en la búsqueda del inicio del comentario
     }
 
@@ -276,7 +286,7 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 
     const originalDeclaration = lines[declarationIndex]; // Guarda la línea original de la declaración para analizarla posteriormente
 
-    // Comprobar si la función o metodo tiene parámetros
+    // Verifica si la declaración tiene parámetros o valor de retorno, y valida que estén documentados
     if (type === 'function' || type === 'class') { // Verifica si la declaración es de tipo función o clase
         const hasParameters = originalDeclaration.includes('(') && // Evalúa si la declaración tiene parámetros
             !originalDeclaration.includes('()') && // Asegura que no sea una función vacía
@@ -319,7 +329,7 @@ function validateFile(filePath: string, changed: Set<number>): string[] { // Val
 
         const fileContent = readFileSync(filePath, 'utf8'); // Lee el contenido del archivo como texto
         const lines = fileContent.split('\n'); // Divide el contenido en un arreglo de líneas
-        const errors: string[] = []; // Inicializa el arreglo donde se almacenarán los errores
+        const errors: string[] = []; // Inicializa el arreglo donde se almacenarán los errores de documentación encontrados
 
         const declarations: Array<{ index: number; type: keyof typeof rules }> = [];  // Guarda las declaraciones encontradas en líneas modificadas
 
@@ -383,7 +393,7 @@ function runValidation(): boolean { // Ejecuta la validación de TSDoc para arch
                 continue; // Salta al siguiente archivo
             }
 
-            if (file.endsWith('tsdoc-validator.ts') ||file.endsWith('tsdoc-rules.ts')|| file.includes('node_modules/'))  { // Evita validar el propio validador o archivos de node_modules
+            if (file.endsWith('tsdoc-validator.ts') || file.includes('node_modules/'))  { // Evita validar el propio validador o archivos de node_modules
                 continue;
             }
 
