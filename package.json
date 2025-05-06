@@ -1,0 +1,16 @@
+{
+  "name": "tsdoc-validator-project",
+  "version": "1.0.0",
+  "description": "Validador de documentación TSDoc para TypeScript/JavaScript",
+  "scripts": {
+    "validate-docs": "ts-node ./scripts/validators/tsdoc-validator.ts",
+    "install-validator": "bash ./install-tsdoc-validator.sh",
+    "validate-tsdoc": "ts-node ./scripts/validators/tsdoc-validator-new-code.ts"
+  },
+  "author": "Ronald Pelaez",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
