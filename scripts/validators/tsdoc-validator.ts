@@ -320,53 +320,62 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
  * @param changed - Líneas cambiadas.
  * @returns Lista de errores encontrados.
  */
-function validateFile(filePath: string, changed: Set<number>): string[] { // Valida un archivo analizando solo las líneas modificadas; detecta declaraciones en esas líneas y verifica si tienen la documentación correcta en inglés, con etiquetas como @param y @returns si aplica
-    try { // Intenta ejecutar la validación y captura errores si ocurren
-        if (!existsSync(filePath)) { // Verifica si el archivo existe en el sistema
-            logDebug(`Archivo no encontrado: ${filePath}`); // Muestra mensaje en consola si no existe
-            return [`Error: Archivo no encontrado - ${filePath}`]; // Devuelve error si el archivo no existe
+function validateFile(filePath: string, changed: Set<number>): string[] {
+    const errors: string[] = []; // Arreglo donde se almacenan errores de documentación encontrados
+
+    try {
+        // Si el archivo ya no existe (por ejemplo, fue eliminado en este commit)
+        if (!existsSync(filePath)) {
+            logDebug(`Archivo eliminado: ${filePath}`); // Se muestra en los logs para informar
+            return [`Archivo eliminado (informativo): ${filePath}`]; // Solo se devuelve un mensaje informativo
         }
 
-        const fileContent = readFileSync(filePath, 'utf8'); // Lee el contenido del archivo como texto
-        const lines = fileContent.split('\n'); // Divide el contenido en un arreglo de líneas
-        const errors: string[] = []; // Inicializa el arreglo donde se almacenarán los errores de documentación encontrados
+        // Lee el contenido del archivo como texto
+        const fileContent = readFileSync(filePath, 'utf8');
+        const lines = fileContent.split('\n'); // Se divide en líneas para procesarlo línea por línea
 
-        const declarations: Array<{ index: number; type: keyof typeof rules }> = [];  // Guarda las declaraciones encontradas en líneas modificadas
+        const declarations: Array<{ index: number; type: keyof typeof rules }> = []; // Almacena declaraciones encontradas
 
-        changed.forEach(lineNumber => {// Recorre cada línea modificada
-            const lineIndex = lineNumber - 1; // Ajusta el número de línea al índice del arreglo
-            if (lineIndex < 0 || lineIndex >= lines.length) return; // Ignora si el índice es inválido
+        // Recorre todas las líneas que fueron modificadas según el diff
+        changed.forEach(lineNumber => {
+            const lineIndex = lineNumber - 1; // Ajuste de índice (los diffs comienzan desde 1)
+            if (lineIndex < 0 || lineIndex >= lines.length) return; // Se ignoran líneas inválidas
 
-            logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);  // Muestra la línea que se está evaluando
+            logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);
 
-            const declaration = findDeclarationLine(lines, lineIndex); // Busca si hay una declaración en esa línea o líneas previas
-            if (!declaration) { // Si no encuentra una declaración, la ignora
-                logDebug(`No se encontró declaración para la línea ${lineNumber}`);// Muestra mensaje si no hay declaración
-                return; // Salta a la siguiente línea
+            // Busca si en esta línea o hacia atrás hay una declaración (función, clase, etc.)
+            const declaration = findDeclarationLine(lines, lineIndex);
+            if (!declaration) {
+                logDebug(`No se encontró declaración para la línea ${lineNumber}`);
+                return; // Si no hay nada que validar, continúa con la siguiente línea
             }
 
-            const alreadyIncluded = declarations.some(d => d.index === declaration.index); // Verifica si ya se registró esta declaración
-            if (!alreadyIncluded) { // Si no estaba incluida aún
-                declarations.push(declaration); // La agrega a la lista de declaraciones
-                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`); // Muestra la declaración encontrada
-            }
-        });
-
-        declarations.forEach(({ index: declarationIndex, type }) => {// Recorre todas las declaraciones encontradas
-            logDebug(`Validando ${type} en línea ${declarationIndex + 1} en ${filePath}`); // Muestra qué tipo de declaración se está validando
-
-            const validationErrors = validateDocumentation(lines, declarationIndex, type); // Ejecuta la validación de la documentación
-            if (validationErrors.length > 0) { // Si hay errores de documentación
-                const codeLine = lines[declarationIndex].trim(); // Obtiene el contenido de la línea con la declaración
-                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`); // Agrega un mensaje de error con el código
-                errors.push(...validationErrors.map(e => `  - ${e}`)); // Agrega los errores de validación detallados
+            // Evita registrar dos veces la misma declaración
+            const alreadyIncluded = declarations.some(d => d.index === declaration.index);
+            if (!alreadyIncluded) {
+                declarations.push(declaration); // Se registra la declaración para validarla después
+                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
             }
         });
 
-        return errors; // Devuelve todos los errores encontrados
-    } catch (error) { // Captura cualquier excepción
-        logDebug(`Error al validar archivo ${filePath}: ${error}`); // Muestra el error ocurrido durante la validación
-        return [`Error al validar archivo ${filePath}: ${error}`]; // Devuelve el error como mensaje
+        // Valida la documentación de cada declaración detectada
+        declarations.forEach(({ index: declarationIndex, type }) => {
+            logDebug(`Validando ${type} en línea ${declarationIndex + 1} en ${filePath}`);
+
+            const validationErrors = validateDocumentation(lines, declarationIndex, type); // Llama al validador real
+            if (validationErrors.length > 0) {
+                const codeLine = lines[declarationIndex].trim(); // Muestra la línea con problema
+                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`); // Mensaje con el código
+                errors.push(...validationErrors.map(e => `  - ${e}`)); // Agrega los detalles del error
+            }
+        });
+
+        return errors; // Devuelve todos los errores encontrados (si los hay)
+
+    } catch (error) {
+        // Si ocurre un error inesperado al procesar el archivo
+        logDebug(`Error al validar archivo ${filePath}: ${error}`);
+        return [`Error al validar archivo ${filePath}: ${error}`];
     }
 }
 
