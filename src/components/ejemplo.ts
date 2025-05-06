@@ -37,7 +37,7 @@ class Usuario {
     }
 
     /**
-     * method to hello the user.
+     * Method to hello the user.
      *
      * @returns {string} A hello to user.
      */
