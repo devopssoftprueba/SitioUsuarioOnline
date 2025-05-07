@@ -55,15 +55,15 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
             let baseBranch = 'main';
             try {
                 execSync('git rev-parse --verify origin/main', { stdio: 'pipe' });
-            } catch (e1) {
+            } catch {
                 try {
                     execSync('git rev-parse --verify origin/master', { stdio: 'pipe' });
                     baseBranch = 'master';
-                } catch (e2) {
+                } catch {
                     try {
                         execSync('git rev-parse --verify origin/develop', { stdio: 'pipe' });
                         baseBranch = 'develop';
-                    } catch (e3) {
+                    } catch {
                         diffCommand = 'git diff --staged -U3 --no-color';
                         logDebug('No se encontró rama remota. Usando cambios preparados (staged).');
                     }
@@ -87,44 +87,38 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
 
         const processDiffOutput = (diffOutput: string) => {
             let currentFile = '';
-            let currentHunkStartLine = 0;
-            let currentHunkLineCount = 0;
-
             const lines = diffOutput.split('\n');
+
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
 
                 const fileMatch = line.match(fileRegex);
                 if (fileMatch) {
                     currentFile = fileMatch[2];
+                    if (!changedLines[currentFile]) {
+                        changedLines[currentFile] = new Set<number>();
+                    }
                     continue;
                 }
 
                 const hunkMatch = line.match(hunkRegex);
                 if (hunkMatch && currentFile) {
-                    currentHunkStartLine = parseInt(hunkMatch[1], 10);
-                    currentHunkLineCount = hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1;
                     const hunkStartIndex = i;
+                    const currentHunkStartLine = parseInt(hunkMatch[1], 10);
 
-                    if (!changedLines[currentFile]) {
-                        changedLines[currentFile] = new Set<number>();
-                    }
-
-                    // Solo procesar líneas añadidas dentro de este hunk
-                    for (let k = hunkStartIndex + 1; k < lines.length; k++) {
+                    for (let k = hunkStartIndex + 1, offset = 0; k < lines.length; k++) {
                         const diffLine = lines[k];
-                        if (diffLine.startsWith('@@') || diffLine.startsWith('diff --git')) {
-                            break;
-                        }
+                        if (diffLine.startsWith('@@') || diffLine.startsWith('diff --git')) break;
+
                         if (diffLine.startsWith('+') && !diffLine.startsWith('+++')) {
-                            const offsetInHunk = k - (hunkStartIndex + 1);
-                            const realLineNum = currentHunkStartLine + offsetInHunk;
+                            const realLineNum = currentHunkStartLine + offset;
                             changedLines[currentFile].add(realLineNum);
                         }
-                    }
 
-                    // (Opcional) lógica de modifiedFunctions si aún se usa
-                    // ...
+                        if (!diffLine.startsWith('-')) {
+                            offset++;
+                        }
+                    }
                 }
             }
         };
