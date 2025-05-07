@@ -1,11 +1,11 @@
 // Importa la función execSync del módulo child_process para ejecutar comandos de terminal
 import { execSync } from 'child_process';
-// Importa las funciones readFileSync del módulo fs para leer archivos y verificar su existencia
-import { readFileSync } from 'fs';
+// Importa las funciones readFileSync y existsSync del módulo fs para leer archivos y verificar su existencia
+import { readFileSync, existsSync } from 'fs';
 // Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
 
-const rules = { //objeto en el que defino las reglas que utilizará el script para realizar la validación.
+const rules = {
     'class': {
         requiredTags: ['@description'],
         optionalTags: ['@example', '@remarks', '@deprecated']
@@ -25,23 +25,12 @@ logDebug('Usando validación inteligente de etiquetas basada en el código');
 // Define un tipo ChangedLines que es un objeto con claves string y valores Set<number> para almacenar líneas modificadas por archivo
 type ChangedLines = Record<string, Set<number>>;
 
-/**
- * Registra mensajes de depuración con marca de tiempo
- *
- * @param message - El mensaje a mostrar en el log
- */
 function logDebug(message: string): void {
-    console.log(`[${new Date().toISOString()}] ${message}`); //Escribe en la consola el mensaje de error
+    console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
 // Imprime un mensaje indicando que el validador TSDoc está en ejecución
 logDebug('🔍 Validador TSDoc en ejecución...');
-
-/**
- * Obtiene las líneas modificadas de los archivos en el push actual.
- *
- * @returns Un objeto con los archivos y sus líneas modificadas.
- */
 function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set<number>> } {
     try {
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
@@ -114,7 +103,7 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
                     changedLines[currentFile].add(newLineNumber);
                     newLineNumber++;
                 } else if (line.startsWith('-') && !line.startsWith('---')) {
-                    changedLines[currentFile].add(newLineNumber); // Línea eliminada (referenciada por su número en nuevo archivo)
+                    changedLines[currentFile].add(newLineNumber);
                 } else {
                     newLineNumber++;
                 }
@@ -146,12 +135,7 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         return { lines: {}, functions: {} };
     }
 }
-/**
- * Determina el tipo de declaración basado en la línea de código.
- *
- * @param line - Línea de código a analizar
- * @returns El tipo de declaración identificado
- */
+
 function determineDeclarationType(line: string): keyof typeof rules {
     const trimmed = line.trim();
 
@@ -188,16 +172,25 @@ function determineDeclarationType(line: string): keyof typeof rules {
         return 'property';
     }
 
-    return 'function'; // Por defecto asumimos función
+    return 'function'; // Por defecto asumimos función si no podemos determinar claramente
 }
 
-/**
- * Busca la declaración de clase/metodo/propiedad más cercana hacia arriba.
- *
- * @param lines - Líneas del archivo.
- * @param startIndex - Índice desde donde buscar hacia arriba.
- * @returns El índice de la declaración encontrada y su tipo, o null si no se encuentra.
- */
+function isInsideComment(lines: string[], lineIndex: number): boolean {
+    // busca hacia arriba el inicio /** y hacia abajo el cierre */
+    let i = lineIndex;
+    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
+        if (lines[i].trim().endsWith('*/')) return false;
+        i--;
+    }
+    if (i < 0) return false;
+
+    let j = lineIndex;
+    while (j < lines.length && !lines[j].trim().endsWith('*/')) {
+        j++;
+    }
+    return j < lines.length;
+}
+
 function findDeclarationLine(
     lines: string[],
     startIndex: number
@@ -280,12 +273,6 @@ function findDeclarationLine(
 
     return null;
 }
-/**
- * Verifica si la documentación está en inglés.
- *
- * @param commentBlock - El bloque de comentarios TSDoc a verificar
- * @returns Array de errores si no está en inglés, array vacío si es válido
- */
 function validateEnglishDocumentation(commentBlock: string): string[] {
     // Ampliamos significativamente el glosario de palabras en español
     const spanishWords = [
@@ -345,14 +332,20 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
     return [];
 }
 
-/**
- * Verifica si existe un bloque de comentarios TSDoc válido para una declaración.
- *
- * @param lines - Líneas del archivo
- * @param declarationIndex - Índice donde está la declaración
- * @param type - Tipo de declaración
- * @returns Lista de errores encontrados
- */
+function validateCommentChange(
+    lines: string[],
+    commentLineIdx: number
+): string[] {
+    // 1) Encuentra la declaración correspondiente justo debajo
+    const decl = findDeclarationLine(lines, commentLineIdx + 1);
+    if (!decl) {
+        return ['Error: Bloque de documentación modificado sin declaración asociada.'];
+    }
+
+    // 2) Invoca la validación real pasando decl.index y decl.type
+    return validateDocumentation(lines, decl.index, decl.type);
+}
+
 function validateDocumentation(
     lines: string[],
     declarationIndex: number,
@@ -416,66 +409,28 @@ function validateDocumentation(
     return errors;
 }
 
-/**
- * Comprueba si la línea dada forma parte de un bloque /** … *\/
- */
-function isInsideComment(lines: string[], lineIndex: number): boolean {
-    // busca hacia arriba el inicio /** y hacia abajo el cierre */
-    let i = lineIndex;
-    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
-        if (lines[i].trim().endsWith('*/')) return false;
-        i--;
-    }
-    if (i < 0) return false;
-    let j = lineIndex;
-    while (j < lines.length && !lines[j].trim().endsWith('*/')) {
-        j++;
-    }
-    return j < lines.length;
-}
-
-/**
- * Para cada línea de comentario modificada, valida su bloque y
- * devuelve errores (vacío si no los hay).
- */
-function validateCommentChange(
-    lines: string[],
-    commentLineIdx: number
-): string[] {
-    // 1) Encuentra la declaración correspondiente justo debajo
-    const decl = findDeclarationLine(lines, commentLineIdx + 1);
-    if (!decl) {
-        return ['Error: Bloque de documentación modificado sin declaración asociada.'];
-    }
-
-    // 2) Invoca la validación real pasando decl.index y decl.type
-    return validateDocumentation(lines, decl.index, decl.type);
-}
-
-
-/**
- * Válida un archivo verificando la documentación correcta en los cambios.
- *
- * @param filePath - Ruta del archivo.
- * @param changed - Líneas cambiadas.
- * @returns Lista de errores encontrados.
- */
 function validateFile(
     filePath: string,
     changed: Set<number>
 ): string[] {
     const errors: string[] = [];
+
+    if (!existsSync(filePath)) {
+        logDebug(`Archivo eliminado: ${filePath}`);
+        return [`Archivo eliminado (informativo): ${filePath}`];
+    }
+
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
 
     // 1) Separar cambios en comentarios vs. cambios en código
     const commentChanges = new Set<number>();
-    const codeChanges    = new Set<number>();
+    const codeChanges = new Set<number>();
     for (const num of changed) {
         const idx = num - 1;
         if (idx < 0 || idx >= lines.length) continue;
         if (isInsideComment(lines, idx)) commentChanges.add(idx);
-        else                              codeChanges.add(idx);
+        else codeChanges.add(idx);
     }
 
     // 2) Procesar cambios en documentación
@@ -512,14 +467,10 @@ function validateFile(
 
     return errors;
 }
-/**
- * Ejecuta la validación en todos los archivos con cambios.
- *
- * @returns True si la validación pasa, false si hay errores.
- */
+
 function runValidation(): boolean {
     try {
-        const { lines: changedLines} = getChangedLines();
+        const { lines: changedLines } = getChangedLines();
         let validationResult = true;
         const errorsByFile: Record<string, string[]> = {};
         let totalErrors = 0;
@@ -542,7 +493,6 @@ function runValidation(): boolean {
             const fullPath = path.resolve(file);
             logDebug(`Validando archivo: ${fullPath}`);
 
-            // Obtenemos las funciones modificadas para este archivo
             const errors = validateFile(fullPath, changedLines[file]);
 
             if (errors.length > 0) {
@@ -589,11 +539,11 @@ function runValidation(): boolean {
     }
 }
 
-if (require.main === module) { // Verifica si este archivo se está ejecutando directamente
+if (require.main === module) {
     console.log('\n🔍 Validador TSDoc en ejecución (análisis inteligente de documentación)');
 
-    const result = runValidation(); // Ejecuta la validación
-    process.exit(result ? 0 : 1); // Finaliza el proceso con código 0 si éxito, 1 si error
+    const result = runValidation();
+    process.exit(result ? 0 : 1); // Exit with code 0 if successful, 1 if errors
 }
 
-export { runValidation };// Exporta la función para ser usada desde otros archivos
+export { runValidation };
