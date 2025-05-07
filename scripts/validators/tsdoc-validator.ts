@@ -128,6 +128,15 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
             logDebug(`Error en diff unstaged: ${e}`);
         }
 
+        // NUEVO: Añadir un logging más detallado para depuración
+        if (Object.keys(changedLines).length > 0) {
+            logDebug('Detalle de líneas modificadas:');
+            for (const file in changedLines) {
+                const lines = Array.from(changedLines[file]).sort((a, b) => a - b);
+                logDebug(`  ${file}: líneas ${lines.join(', ')}`);
+            }
+        }
+
         logDebug(`Se encontraron cambios en ${Object.keys(changedLines).length} archivos`);
         return { lines: changedLines, functions: modifiedFunctions };
     } catch (error) {
@@ -136,6 +145,7 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
     }
 }
 
+// 1. Función para determinar el tipo de declaración (mejorada para detectar métodos de clase con tipo de retorno)
 function determineDeclarationType(line: string): keyof typeof rules {
     const trimmed = line.trim();
 
@@ -151,11 +161,11 @@ function determineDeclarationType(line: string): keyof typeof rules {
     // Mejoramos la detección de funciones
     else if (
         trimmed.startsWith('function ') ||
-        // Añadimos este patrón para detectar métodos de clase con tipo de retorno
+        // NUEVO: Detección de métodos de clase con tipo de retorno
         trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z0-9_<>[\]|&]+\s*{?$/) ||
         trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
         trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
-        // Añadimos este patrón para métodos de clase con modificadores y tipo de retorno
+        // NUEVO: Métodos de clase con modificadores y tipo de retorno
         trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z0-9_<>[\]|&]+\s*{?$/) ||
         trimmed.match(/^export\s+(?:async\s+)?function\s+[a-zA-Z0-9_]+/) ||
         trimmed.match(/^export\s+default\s+(?:async\s+)?function/) ||
@@ -391,6 +401,12 @@ function validateDocumentation(
     const errors: string[] = [];
     const declLine = lines[declarationIndex].trim();
 
+    // NUEVO: Loggear para depuración en casos problemáticos
+    if (declLine.includes('obtenerDominioCorreo') || declLine.includes('correo')) {
+        logDebug(`Validando: "${declLine}" como tipo "${type}"`);
+        logDebug(`Bloque de comentario:\n${commentBlock}`);
+    }
+
     // 4) Validar sólo los requiredTags de rules[type]
     const required = rules[type].requiredTags.slice();
 
@@ -400,9 +416,22 @@ function validateDocumentation(
         if (idx !== -1) required.splice(idx, 1);
     }
 
+    // MEJORADO: Validación de etiquetas y su contenido
     for (const tag of required) {
+        // Verificar si la etiqueta existe
         if (!commentBlock.includes(tag)) {
             errors.push(`Error: Falta la etiqueta ${tag} en la documentación de la ${type}.`);
+        } else {
+            // NUEVO: Verificar que la etiqueta tiene contenido significativo
+            const tagPattern = new RegExp(`${tag}\\s+([^@\\n]*?)(?=\\n\\s*\\*\\s*@|\\n\\s*\\*/|$)`, 's');
+            const match = commentBlock.match(tagPattern);
+
+            if (!match || match[1].trim().length < 3) {
+                errors.push(`Error: La etiqueta ${tag} existe pero no tiene contenido descriptivo adecuado.`);
+            } else if (match[1].trim().length < 10) {
+                // Advertencia para contenido muy corto pero no vacío
+                errors.push(`Advertencia: La etiqueta ${tag} tiene contenido muy breve. Considere añadir más detalles.`);
+            }
         }
     }
 
