@@ -110,7 +110,10 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
                     changedLines[currentFile] = new Set<number>();
                 }
 
-                if (line.startsWith('+') && !line.startsWith('+++')) {
+                if (
+                    (line.startsWith('+') && !line.startsWith('+++')) ||
+                    (line.startsWith('-') && !line.startsWith('---'))
+                ) {
                     changedLines[currentFile].add(newLineNumber);
                 }
 
