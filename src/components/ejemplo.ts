@@ -52,7 +52,7 @@ class Usuario {
      */
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
-        return partesCorreo.length > 1 ? partesCorreo[1] : '';
+        return partesCorreo.length > 1 ? partesCorreo[1] : '' ;
     }
 }
 
