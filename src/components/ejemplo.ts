@@ -48,7 +48,7 @@ class Usuario {
     /**
      * Metodo para obtener el dominio del correo del usuario.
      *
-     *
+     * prueba
      */
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
