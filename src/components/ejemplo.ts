@@ -1,35 +1,27 @@
 /**
- * Clase que representa a un Usuario en el sistema.
+ * Class representing a user in the system.
  *
- * @description Esta clase contiene información básica sobre un usuario, como su nombre y correo electrónico,
- * y ofrece métodos para interactuar con estos datos.
+ * @description This class stores basic user information such as name and email,
+ * and provides methods to interact with that data.
  *
- * @category Modelo
- * @package SistemaUsuarios
+ * @category Model
+ * @package UserSystem
  * @author Ronald
  * @version 1.0
  * @since 2025-04-25
  */
 class Usuario {
-    /**
-     * Nombre del usuario.
-     *
-     * @var {string}
-     */
+    /** The user's name. */
     nombre: string;
 
-    /**
-     * Correo electrónico del usuario.
-     *
-     * @var {string}
-     */
+    /** The user's email address. */
     correo: string;
 
     /**
-     * Constructor de la clase Usuario.
+     * Creates an instance of Usuario.
      *
-     * @param {string} nombre - El nombre del usuario.
-     * @param {string} correo - El correo electrónico del usuario.
+     * @param nombre - The user's name.
+     * @param correo - The user's email address.
      */
     constructor(nombre: string, correo: string) {
         this.nombre = nombre;
@@ -37,26 +29,21 @@ class Usuario {
     }
 
     /**
-     * Method to hello the user.
+     * Returns a greeting for the user.
      *
-     * @returns {string} A hello to user.
+     * @returns A greeting string with the user's name.
      */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
     }
 
     /**
-     * Metodo para obtener el dominio del correo del usuario.
+     * Extracts the domain from the user's email address.
      *
-     * prueba
+     * @returns The domain part of the user's email, or an empty string if not found.
      */
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
-        return partesCorreo.length > 1 ? partesCorreo[1] : '' ;
+        return partesCorreo.length > 1 ? partesCorreo[1] : '';
     }
 }
-
-// Ejemplo de uso
-const usuario = new Usuario("Juan Pérez", "juan.perez@example.com");
-console.log(usuario.saludar());
-console.log(usuario.obtenerDominioCorreo());
