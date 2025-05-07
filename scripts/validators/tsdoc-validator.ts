@@ -47,21 +47,21 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
         const remoteExists = execSync(`git ls-remote --heads origin ${currentBranch}`, { encoding: 'utf8' }).trim();
 
-        let diffCommand: string = '';
+        let diffCommand = '';
         if (remoteExists) {
             diffCommand = `git diff origin/${currentBranch}..HEAD -U3 --no-color`;
             logDebug(`Comparando con rama remota: origin/${currentBranch}`);
         } else {
             let baseBranch = 'main';
             try {
-                execSync('git rev-parse --verify origin/main', { stdio: 'pipe' });
+                execSync('git rev-parse --verify origin/main');
             } catch {
                 try {
-                    execSync('git rev-parse --verify origin/master', { stdio: 'pipe' });
+                    execSync('git rev-parse --verify origin/master');
                     baseBranch = 'master';
                 } catch {
                     try {
-                        execSync('git rev-parse --verify origin/develop', { stdio: 'pipe' });
+                        execSync('git rev-parse --verify origin/develop');
                         baseBranch = 'develop';
                     } catch {
                         diffCommand = 'git diff --staged -U3 --no-color';
@@ -77,7 +77,6 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
 
         const stagedDiffCommand = 'git diff --staged -U3 --no-color';
         const unstagedDiffCommand = 'git diff -U3 --no-color';
-        logDebug(`Ejecutando comandos diff: ${diffCommand}, ${stagedDiffCommand}, ${unstagedDiffCommand}`);
 
         const changedLines: ChangedLines = {};
         const modifiedFunctions: Record<string, Set<number>> = {};
@@ -88,6 +87,8 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         const processDiffOutput = (diffOutput: string) => {
             let currentFile = '';
             const lines = diffOutput.split('\n');
+            let currentLineInHunk = 0;
+            let newLineNumber = 0;
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
@@ -95,30 +96,26 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
                 const fileMatch = line.match(fileRegex);
                 if (fileMatch) {
                     currentFile = fileMatch[2];
-                    if (!changedLines[currentFile]) {
-                        changedLines[currentFile] = new Set<number>();
-                    }
                     continue;
                 }
 
                 const hunkMatch = line.match(hunkRegex);
-                if (hunkMatch && currentFile) {
-                    const hunkStartIndex = i;
-                    const currentHunkStartLine = parseInt(hunkMatch[1], 10);
+                if (hunkMatch) {
+                    newLineNumber = parseInt(hunkMatch[1], 10);
+                    currentLineInHunk = 0;
+                    continue;
+                }
 
-                    for (let k = hunkStartIndex + 1, offset = 0; k < lines.length; k++) {
-                        const diffLine = lines[k];
-                        if (diffLine.startsWith('@@') || diffLine.startsWith('diff --git')) break;
+                if (!changedLines[currentFile]) {
+                    changedLines[currentFile] = new Set<number>();
+                }
 
-                        if (diffLine.startsWith('+') && !diffLine.startsWith('+++')) {
-                            const realLineNum = currentHunkStartLine + offset;
-                            changedLines[currentFile].add(realLineNum);
-                        }
+                if (line.startsWith('+') && !line.startsWith('+++')) {
+                    changedLines[currentFile].add(newLineNumber);
+                }
 
-                        if (!diffLine.startsWith('-')) {
-                            offset++;
-                        }
-                    }
+                if (!line.startsWith('-')) {
+                    newLineNumber++;
                 }
             }
         };
@@ -128,24 +125,28 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         } catch (e) {
             logDebug(`Error en diff principal: ${e}`);
         }
+
         try {
             processDiffOutput(execSync(stagedDiffCommand, { encoding: 'utf8' }));
         } catch (e) {
             logDebug(`Error en diff staged: ${e}`);
         }
+
         try {
             processDiffOutput(execSync(unstagedDiffCommand, { encoding: 'utf8' }));
         } catch (e) {
             logDebug(`Error en diff unstaged: ${e}`);
         }
 
-        logDebug(`Se encontraron cambios en ${Object.keys(changedLines).length} archivos`);
         return { lines: changedLines, functions: modifiedFunctions };
     } catch (error) {
         logDebug(`Error al obtener líneas cambiadas: ${error}`);
         return { lines: {}, functions: {} };
+
     }
+
 }
+
 /**
  * Determina el tipo de declaración basado en la línea de código.
  *
