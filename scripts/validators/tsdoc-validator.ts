@@ -77,9 +77,11 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
             }
         }
 
-        logDebug(`Ejecutando comando diff: ${diffCommand}`);
-        const diffOutput = execSync(diffCommand, { encoding: 'utf8' });
-        logDebug(`Longitud de la salida diff: ${diffOutput.length} bytes`);
+        // También capturamos cambios no staged
+        let stagedDiffCommand = 'git diff --staged -U3 --no-color';
+        let unstagedDiffCommand = 'git diff -U3 --no-color';
+
+        logDebug(`Ejecutando comandos diff: ${diffCommand}, ${stagedDiffCommand}, ${unstagedDiffCommand}`);
 
         const changedLines: ChangedLines = {};
         const modifiedFunctions: Record<string, Set<number>> = {};
@@ -88,70 +90,115 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
         const functionStartRegex = /^[\+\-](\s*(?:export\s+)?(?:async\s+)?(?:function|class|interface|const|let|var|public|private|protected))/;
 
-        let currentFile = '';
-        let inFunction = false;
-        let currentFunctionStartLine = -1;
+        // Función para procesar la salida de diff
+        const processDiffOutput = (diffOutput: string) => {
+            let currentFile = '';
+            let inFunction = false;
+            let currentFunctionStartLine = -1;
+            let currentHunkStartLine = 0;
+            let currentHunkLineCount = 0;
 
-        const lines = diffOutput.split('\n');
-        logDebug(`Procesando ${lines.length} líneas de salida diff`);
+            const lines = diffOutput.split('\n');
+            logDebug(`Procesando ${lines.length} líneas de salida diff`);
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
 
-            const fileMatch = line.match(fileRegex);
-            if (fileMatch) {
-                const [, , newFile] = fileMatch;
-                currentFile = newFile;
-                inFunction = false;
-                currentFunctionStartLine = -1;
-                continue;
-            }
-
-            // Si estamos en un nuevo bloque de diff
-            const hunkMatch = line.match(hunkRegex);
-            if (hunkMatch && currentFile) {
-                const startLine = parseInt(hunkMatch[1], 10);
-                const lineCount = hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1;
-
-                const linesSet = changedLines[currentFile] || new Set<number>();
-                for (let j = 0; j < lineCount; j++) {
-                    linesSet.add(startLine + j);
+                // Detecta archivo actual
+                const fileMatch = line.match(fileRegex);
+                if (fileMatch) {
+                    const [, , newFile] = fileMatch;
+                    currentFile = newFile;
+                    inFunction = false;
+                    currentFunctionStartLine = -1;
+                    continue;
                 }
-                changedLines[currentFile] = linesSet;
 
-                // Comprobamos las próximas líneas para ver si identificamos una función completa modificada
-                let currentLineNumber = startLine;
-                for (let j = i + 1; j < lines.length && (j - i - 1) < lineCount * 2; j++) {
-                    const nextLine = lines[j];
+                // Si estamos en un nuevo bloque de diff
+                const hunkMatch = line.match(hunkRegex);
+                if (hunkMatch && currentFile) {
+                    currentHunkStartLine = parseInt(hunkMatch[1], 10);
+                    currentHunkLineCount = hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1;
 
-                    // Si es una línea del diff que añade o elimina contenido
-                    if (nextLine.startsWith('+') || nextLine.startsWith('-')) {
-                        // Si parece el inicio de una función o metodo
-                        const funcMatch = nextLine.match(functionStartRegex);
-                        if (funcMatch) {
-                            currentFunctionStartLine = currentLineNumber;
-                            inFunction = true;
-
-                            // Registramos la función como modificada
-                            const functionsSet = modifiedFunctions[currentFile] || new Set<number>();
-                            functionsSet.add(currentFunctionStartLine);
-                            modifiedFunctions[currentFile] = functionsSet;
-                        }
-
-                        // Si detectamos el inicio de un bloque después de una posible declaración de función
-                        if (inFunction && nextLine.includes('{')) {
-                            // Confirmamos que estamos dentro de una función
-                            const functionsSet = modifiedFunctions[currentFile] || new Set<number>();
-                            functionsSet.add(currentFunctionStartLine);
-                            modifiedFunctions[currentFile] = functionsSet;
-                        }
+                    // Inicializa el conjunto de líneas cambiadas para este archivo si no existe
+                    if (!changedLines[currentFile]) {
+                        changedLines[currentFile] = new Set<number>();
                     }
 
-                    if (nextLine.startsWith('+')) {
-                        currentLineNumber++;
+                    // Marca un rango más amplio alrededor del cambio para asegurar que capturamos las declaraciones
+                    const contextRange = 20; // Aumentamos el contexto para capturar mejor las declaraciones
+                    for (let j = Math.max(1, currentHunkStartLine - contextRange);
+                         j < currentHunkStartLine + currentHunkLineCount + contextRange; j++) {
+                        changedLines[currentFile].add(j);
+                    }
+
+                    // Revisamos si hay alguna función o metodo completo modificado
+                    let insideChangedFunction = false;
+                    let functionStartLineInHunk = -1;
+
+                    for (let j = i + 1; j < lines.length && lines[j].charAt(0) !== '@'; j++) {
+                        const codeLine = lines[j];
+
+                        // Solo nos interesan líneas añadidas
+                        if (codeLine.startsWith('+') && codeLine.length > 1) {
+                            const actualCode = codeLine.substring(1);
+
+                            // Si parece el inicio de una declaración
+                            if (
+                                actualCode.trim().startsWith('function ') ||
+                                actualCode.trim().startsWith('class ') ||
+                                actualCode.trim().startsWith('interface ') ||
+                                actualCode.trim().match(/^export\s+(class|interface|function)/) ||
+                                actualCode.trim().match(/^(public|private|protected)\s+[a-zA-Z0-9_]+\s*\(/) ||
+                                (actualCode.trim().startsWith('const ') ||
+                                    actualCode.trim().startsWith('let ') ||
+                                    actualCode.trim().startsWith('var ')) &&
+                                (actualCode.includes(' = function') ||
+                                    actualCode.includes(' = (') ||
+                                    actualCode.includes(' = async'))
+                            ) {
+                                insideChangedFunction = true;
+                                // Estimar la línea real sumando el índice relativo al inicio del hunk
+                                const lineOffset = j - (i + 1);
+                                functionStartLineInHunk = currentHunkStartLine + lineOffset;
+
+                                // Si no existe el registro para funciones modificadas para este archivo, lo creamos
+                                if (!modifiedFunctions[currentFile]) {
+                                    modifiedFunctions[currentFile] = new Set<number>();
+                                }
+
+                                // Registramos esta función como modificada
+                                modifiedFunctions[currentFile].add(functionStartLineInHunk);
+                                logDebug(`Función/método modificado detectado en línea ${functionStartLineInHunk}: ${actualCode.trim()}`);
+                            }
+                        }
                     }
                 }
             }
+        };
+
+        // Procesamos la salida principal de diff
+        try {
+            const mainDiffOutput = execSync(diffCommand, { encoding: 'utf8' });
+            processDiffOutput(mainDiffOutput);
+        } catch (e) {
+            logDebug(`Error en diff principal: ${e}`);
+        }
+
+        // Procesamos cambios staged
+        try {
+            const stagedDiffOutput = execSync(stagedDiffCommand, { encoding: 'utf8' });
+            processDiffOutput(stagedDiffOutput);
+        } catch (e) {
+            logDebug(`Error en diff staged: ${e}`);
+        }
+
+        // Procesamos cambios unstaged
+        try {
+            const unstagedDiffOutput = execSync(unstagedDiffCommand, { encoding: 'utf8' });
+            processDiffOutput(unstagedDiffOutput);
+        } catch (e) {
+            logDebug(`Error en diff unstaged: ${e}`);
         }
 
         logDebug(`Se encontraron cambios en ${Object.keys(changedLines).length} archivos`);
@@ -219,80 +266,74 @@ function findDeclarationLine(
     lines: string[],
     startIndex: number
 ): { index: number; type: keyof typeof rules } | null {
-    // Primero intentamos encontrar una declaración en la línea actual
-    const currentLine = lines[startIndex].trim();
+    // Verificamos primero la línea actual
+    if (startIndex >= 0 && startIndex < lines.length) {
+        const currentLine = lines[startIndex].trim();
 
-    // Si la línea actual parece ser una declaración, la devolvemos directamente
-    if (
-        currentLine.startsWith('class ') ||
-        currentLine.startsWith('interface ') ||
-        currentLine.startsWith('function ') ||
-        currentLine.startsWith('public ') ||
-        currentLine.startsWith('private ') ||
-        currentLine.startsWith('protected ') ||
-        currentLine.startsWith('static ') ||
-        currentLine.startsWith('readonly ') ||
-        currentLine.startsWith('const ') && (currentLine.includes(' = function') || currentLine.includes(' = (') || currentLine.includes(' = async')) ||
-        currentLine.startsWith('let ') && (currentLine.includes(' = function') || currentLine.includes(' = (') || currentLine.includes(' = async')) ||
-        currentLine.startsWith('var ') && (currentLine.includes(' = function') || currentLine.includes(' = (') || currentLine.includes(' = async')) ||
-        /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(currentLine) ||
-        /^async\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(currentLine)
-    ) {
-        return {
-            index: startIndex,
-            type: determineDeclarationType(currentLine)
-        };
+        // Patrones más completos para detectar declaraciones
+        if (
+            currentLine.startsWith('class ') ||
+            currentLine.startsWith('interface ') ||
+            currentLine.startsWith('function ') ||
+            currentLine.match(/^export\s+(class|interface|function|const|let|var)/) ||
+            currentLine.match(/^export\s+default\s+(class|interface|function)/) ||
+            currentLine.match(/^(public|private|protected|readonly|static)/) ||
+            currentLine.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+            currentLine.match(/^async\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+            (currentLine.startsWith('const ') || currentLine.startsWith('let ') || currentLine.startsWith('var ')) &&
+            (currentLine.includes(' = function') || currentLine.includes(' = (') ||
+                currentLine.includes(' = async') || currentLine.includes('=>'))
+        ) {
+            return {
+                index: startIndex,
+                type: determineDeclarationType(currentLine)
+            };
+        }
     }
 
-    // Si no encontramos una declaración en la línea actual, buscamos hacia arriba
-    for (let i = startIndex; i >= 0; i--) {
+    // Si no encontramos nada en la línea actual, buscamos hacia arriba
+    for (let i = startIndex - 1; i >= 0; i--) {
         const trimmed = lines[i].trim();
 
-        // Ignoramos comentarios y líneas vacías
-        if (trimmed.startsWith('/**') || trimmed.startsWith('*') || trimmed === '*/' || trimmed === '') {
+        // Ignoramos comentarios, líneas vacías y decoradores
+        if (trimmed === '' ||
+            trimmed.startsWith('/**') ||
+            trimmed.startsWith('*') ||
+            trimmed === '*/' ||
+            trimmed.startsWith('@')) {
             continue;
         }
 
-        // Ignoramos decoradores
-        if (trimmed.startsWith('@')) {
-            continue;
-        }
-
-        // Si encontramos un cierre de bloque, algo como "}" solo en la línea, saltamos al bloque superior
+        // Si encontramos un cierre de bloque, saltamos al bloque superior
         if (trimmed === '}') {
             let openBrackets = 1;
-            // Buscamos la apertura del bloque correspondiente
-            for (let j = i - 1; j >= 0; j--) {
+            let j = i - 1;
+            while (j >= 0 && openBrackets > 0) {
                 const bracketLine = lines[j].trim();
-                if (bracketLine === '}') {
+                if (bracketLine.endsWith('}')) {
                     openBrackets++;
-                } else if (bracketLine === '{') {
+                } else if (bracketLine.endsWith('{')) {
                     openBrackets--;
-                    if (openBrackets === 0) {
-                        // Encontramos la apertura del bloque, ahora buscamos la declaración
-                        i = j;
-                        break;
-                    }
                 }
+                j--;
             }
+            i = j + 1;
             continue;
         }
 
-        // Si parece una declaración, la devolvemos
+        // Patrones mejorados para detección de declaraciones
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
             trimmed.startsWith('function ') ||
-            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) ||
-            trimmed.startsWith('public ') ||
-            trimmed.startsWith('private ') ||
-            trimmed.startsWith('protected ') ||
-            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed) ||
-            trimmed.startsWith('const ') && (trimmed.includes(' = function') || trimmed.includes(' = (') || trimmed.includes(' = async')),
-            trimmed.startsWith('let ') && (trimmed.includes(' = function') || trimmed.includes(' = (') || trimmed.includes(' = async')),
-            trimmed.startsWith('var ') && (trimmed.includes(' = function') || trimmed.includes(' = (') || trimmed.includes(' = async')),
-                /^export\s+(function|class|interface|const|var|let)/.test(trimmed),
-                /^async\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed)
+            trimmed.match(/^export\s+(class|interface|function|const|let|var)/) ||
+            trimmed.match(/^export\s+default\s+(class|interface|function)/) ||
+            trimmed.match(/^(public|private|protected|readonly|static)/) ||
+            trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+            trimmed.match(/^async\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+            (trimmed.startsWith('const ') || trimmed.startsWith('let ') || trimmed.startsWith('var ')) &&
+            (trimmed.includes(' = function') || trimmed.includes(' = (') ||
+                trimmed.includes(' = async') || trimmed.includes('=>'))
         ) {
             return {
                 index: i,
@@ -309,33 +350,63 @@ function findDeclarationLine(
  * @param commentBlock - El bloque de comentarios TSDoc a verificar
  * @returns Array de errores si no está en inglés, array vacío si es válido
  */
-function validateEnglishDocumentation(commentBlock: string): string[] { // Función que válida que un bloque de comentario esté redactado en inglés, detectando palabras en español. Retorna errores si encuentra contenido en español.
+function validateEnglishDocumentation(commentBlock: string): string[] {
+    // Ampliamos significativamente el glosario de palabras en español
+    const spanishWords = [
+        // Artículos
+        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'del', 'al',
 
-    const spanishWords = [ //glosario de palabras auxiliares para detectar que la documentación está en español.
-        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
-        'para', 'por', 'con', 'sin', 'porque', 'como', 'según', 'cuando',
-        'si', 'pero', 'aunque', 'mientras', 'hasta', 'desde', 'entre',
-        'función', 'archivo', 'línea', 'código', 'método', 'clase',
-        'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna',
-        'pongo', 'esto', 'aquí', 'ese', 'esa','eso', 'español', 'área', 'círculo', 'fórmula'
+        // Preposiciones comunes
+        'para', 'por', 'con', 'sin', 'de', 'a', 'ante', 'bajo', 'contra', 'desde',
+        'en', 'entre', 'hacia', 'hasta', 'según', 'sobre', 'tras',
+
+        // Conjunciones comunes
+        'y', 'e', 'o', 'u', 'ni', 'que', 'porque', 'como', 'cuando', 'si', 'pero',
+        'aunque', 'mientras', 'pues', 'ya', 'también',
+
+        // Verbos comunes
+        'es', 'son', 'está', 'están', 'tiene', 'tienen', 'hace', 'hacen', 'puede', 'pueden',
+        'debe', 'deben', 'contiene', 'establece', 'devuelve', 'retorna', 'obtiene', 'calcula',
+        'muestra', 'ejecuta', 'procesa', 'valida', 'comprueba', 'asigna', 'pongo', 'guarda',
+
+        // Términos técnicos en español
+        'función', 'archivo', 'línea', 'código', 'método', 'clase', 'interfaz', 'objeto',
+        'variable', 'valor', 'parámetro', 'constante', 'arreglo', 'matriz', 'mapa', 'conjunto',
+        'cadena', 'número', 'booleano', 'estructura', 'módulo', 'componente', 'evento',
+
+        // Palabras típicas de documentación en español
+        'esto', 'aquí', 'ese', 'esa', 'eso', 'español', 'implementa', 'ejemplo', 'inicializa',
+        'área', 'círculo', 'fórmula', 'implementación', 'configuración', 'validación', 'documentación'
     ];
 
-    const cleanedComment = commentBlock // Se limpia el bloque de comentarios para facilitar la búsqueda.
-        .split('\n') // Divide el bloque en líneas individuales.
-        .map(line => line.trim().replace(/^\*\s*/, '')) // Quito espacio y asteriscos de cada línea.
-        .join(' ') // Une todas las líneas en una sola cadena.
-        .toLowerCase(); // Convierte el texto a minúsculas para una comparación insensible a mayúsculas.
+    const cleanedComment = commentBlock
+        .split('\n')
+        .map(line => line.trim().replace(/^\*\s*/, ''))
+        .join(' ')
+        .toLowerCase();
 
-    const foundSpanishWords = spanishWords.filter(word => {  // Filtra las palabras en español que estén presentes en el comentario.
-        const regex = new RegExp(`\\b${word}\\b`, 'i'); // Crea una expresión regular para buscar la palabra completa (con límites de palabra).
-        return regex.test(cleanedComment); // Verifica si esa palabra existe en el comentario.
+    // Ignoramos las secciones de ejemplos y líneas de código
+    const relevantText = cleanedComment
+        .replace(/@example[\s\S]*?(?=@|$)/, '') // Eliminar bloques @example
+        .replace(/```[\s\S]*?```/g, '');        // Eliminar bloques de código
+
+    // Mejoramos la detección eliminando palabras en contextos específicos
+    let normalizedText = ' ' + relevantText + ' ';
+
+    // Mejorar detección de palabras completas
+    const foundSpanishWords = spanishWords.filter(word => {
+        // Buscamos la palabra con límites de palabra completa
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        return regex.test(normalizedText);
     });
 
-    if (foundSpanishWords.length > 0) {  // Si se detectaron palabras en español...
+    // Aplicamos un umbral para determinar si está en español
+    // Si hay más de 2 palabras en español detectadas, consideramos que está en español
+    if (foundSpanishWords.length >= 2) {
         return [`Error: La documentación parece estar en español. Palabras detectadas: ${foundSpanishWords.join(', ')}. La documentación debe estar en inglés.`];
     }
 
-    return []; // Si no se detectaron palabras en español, no hay errores.
+    return [];
 }
 
 /**
@@ -443,38 +514,33 @@ function validateFile(filePath: string, changed: Set<number>, modifiedFunctions:
 
         const declarations: Array<{ index: number; type: keyof typeof rules }> = [];
 
-        // Primero procesamos las líneas específicas modificadas
+        // Procesamos las líneas específicas modificadas
         changed.forEach(lineNumber => {
             const lineIndex = lineNumber - 1;
             if (lineIndex < 0 || lineIndex >= lines.length) return;
 
-            logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);
-
+            // Intentamos encontrar la declaración asociada a esta línea
             const declaration = findDeclarationLine(lines, lineIndex);
             if (!declaration) {
-                logDebug(`No se encontró declaración para la línea ${lineNumber}`);
                 return;
             }
 
-            // Verificamos si esta declaración ya está en la lista o si debe ser incluida
+            // Verificamos si esta declaración ya está en la lista
             const alreadyIncluded = declarations.some(d => d.index === declaration.index);
             if (!alreadyIncluded) {
                 declarations.push(declaration);
-                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
+                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim().substring(0, 50)}...`);
             }
         });
 
-        // Ahora procesamos las funciones modificadas identificadas
+        // Procesamos también las funciones específicamente identificadas como modificadas
         modifiedFunctions.forEach(lineNumber => {
             const lineIndex = lineNumber - 1;
             if (lineIndex < 0 || lineIndex >= lines.length) return;
 
-            logDebug(`Verificando función modificada en línea ${lineNumber}: ${lines[lineIndex].trim()}`);
-
             // Verificamos si ya está incluida
             const alreadyIncluded = declarations.some(d => d.index === lineIndex);
             if (!alreadyIncluded) {
-                // Determinamos el tipo de la declaración
                 const type = determineDeclarationType(lines[lineIndex]);
                 declarations.push({ index: lineIndex, type });
                 logDebug(`Función modificada añadida para validación: ${type} en línea ${lineIndex + 1}`);
@@ -488,7 +554,7 @@ function validateFile(filePath: string, changed: Set<number>, modifiedFunctions:
             const validationErrors = validateDocumentation(lines, declarationIndex, type);
             if (validationErrors.length > 0) {
                 const codeLine = lines[declarationIndex].trim();
-                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`);
+                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine.substring(0, 50)}${codeLine.length > 50 ? '...' : ''}`);
                 errors.push(...validationErrors.map(e => `  - ${e}`));
             }
         });
