@@ -423,72 +423,58 @@ function validateDocumentation(
 ): string[] {
     let i = declarationIndex - 1;
 
-    // 1) Avanzar hacia arriba hasta encontrar '*/' o código que rompa el bloque de comentarios
+    // 1) Subir hasta encontrar '*/' o romper por código
     while (i >= 0) {
-        const trimmed = lines[i].trim();
-
-        // Si hay código, imports o decoradores antes de un cierre, no hay TSDoc
+        const t = lines[i].trim();
         if (
-            trimmed !== '' &&
-            !trimmed.startsWith('@') &&
-            !trimmed.startsWith('import ') &&
-            !trimmed.startsWith('//') &&
-            !trimmed.startsWith('*/') &&
-            !trimmed.match(/^\s*$/)
+            t !== '' &&
+            !t.startsWith('@') &&
+            !t.startsWith('import ') &&
+            !t.startsWith('//') &&
+            !t.startsWith('*/') &&
+            !t.match(/^\s*$/)
         ) {
             return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
         }
-
-        if (trimmed === '*/') {
-            break;
-        }
+        if (t === '*/') break;
         i--;
     }
-
-    // Si llegamos al inicio sin ver '*/'
     if (i < 0) {
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
     }
 
-    // 2) Buscar el inicio '/**'
-    let startCommentIndex = i;
-    while (startCommentIndex >= 0 && !lines[startCommentIndex].trim().startsWith('/**')) {
-        startCommentIndex--;
+    // 2) Bajar hasta '/**'
+    let start = i;
+    while (start >= 0 && !lines[start].trim().startsWith('/**')) {
+        start--;
     }
-    if (startCommentIndex < 0) {
+    if (start < 0) {
         return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de ${type}.`];
     }
 
-    // 3) Extraer bloque de comentarios
-    const commentBlock = lines.slice(startCommentIndex, i + 1).join('\n');
+    // 3) Extraer bloque
+    const commentBlock = lines.slice(start, i + 1).join('\n');
     const errors: string[] = [];
     const declLine = lines[declarationIndex].trim();
 
-    // 4) Validar @param y @returns/@return en funciones y clases
-    if (type === 'function' || type === 'class') {
-        // Parámetros
-        const hasParams =
-            declLine.includes('(') &&
-            !declLine.includes('()') &&
-            !declLine.includes('( )');
-        if (hasParams && !commentBlock.includes('@param')) {
-            errors.push(`Error: La declaración tiene parámetros pero falta documentación con etiquetas @param.`);
-        }
+    // 4) Validar sólo los requiredTags de rules[type]
+    const required = rules[type].requiredTags.slice();
 
-        // Retorno de valor (no void)
-        if (type === 'function') {
-            const returnsValue = /:\s*(?!void\b)[\w<>{}\[\]]+/.test(declLine);
-            if (returnsValue && !commentBlock.includes('@returns') && !commentBlock.includes('@return')) {
-                errors.push(`Error: La función parece devolver un valor pero falta la etiqueta @returns.`);
-            }
+    // Si es constructor, no pedimos @returns aunque esté en requiredTags
+    if (type === 'function' && /^\s*constructor\s*\(/.test(declLine)) {
+        const idx = required.indexOf('@returns');
+        if (idx !== -1) required.splice(idx, 1);
+    }
+
+    for (const tag of required) {
+        if (!commentBlock.includes(tag)) {
+            errors.push(`Error: Falta la etiqueta ${tag} en la documentación de la ${type}.`);
         }
     }
 
     // 5) Validar que la documentación esté en inglés
-    const languageErrors = validateEnglishDocumentation(commentBlock);
-    if (languageErrors.length > 0) {
-        errors.push(...languageErrors);
-    }
+    const langErrs = validateEnglishDocumentation(commentBlock);
+    if (langErrs.length) errors.push(...langErrs);
 
     return errors;
 }
