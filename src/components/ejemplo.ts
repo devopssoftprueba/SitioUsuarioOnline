@@ -38,7 +38,7 @@ class Usuario {
     }
 
     /**
-     * Extracts the domain from the user's email address.
+     * cambio esto al español
      *
      * @returns cambio esto al español.
      */
