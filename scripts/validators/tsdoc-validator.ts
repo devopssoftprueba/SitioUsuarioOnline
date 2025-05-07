@@ -151,8 +151,12 @@ function determineDeclarationType(line: string): keyof typeof rules {
     // Mejoramos la detección de funciones
     else if (
         trimmed.startsWith('function ') ||
+        // Añadimos este patrón para detectar métodos de clase con tipo de retorno
+        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z0-9_<>[\]|&]+\s*{?$/) ||
         trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
         trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+        // Añadimos este patrón para métodos de clase con modificadores y tipo de retorno
+        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z0-9_<>[\]|&]+\s*{?$/) ||
         trimmed.match(/^export\s+(?:async\s+)?function\s+[a-zA-Z0-9_]+/) ||
         trimmed.match(/^export\s+default\s+(?:async\s+)?function/) ||
         (trimmed.startsWith('const ') || trimmed.startsWith('let ') || trimmed.startsWith('var ')) &&
