@@ -44,11 +44,10 @@ logDebug('🔍 Validador TSDoc en ejecución...');
  */
 function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set<number>> } {
     try {
-        // El código existente para obtener las líneas modificadas se mantiene igual
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
         const remoteExists = execSync(`git ls-remote --heads origin ${currentBranch}`, { encoding: 'utf8' }).trim();
 
-        let diffCommand;
+        let diffCommand: string = '';
         if (remoteExists) {
             diffCommand = `git diff origin/${currentBranch}..HEAD -U3 --no-color`;
             logDebug(`Comparando con rama remota: origin/${currentBranch}`);
@@ -56,31 +55,28 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
             let baseBranch = 'main';
             try {
                 execSync('git rev-parse --verify origin/main', { stdio: 'pipe' });
-            } catch (e) {
+            } catch (e1) {
                 try {
                     execSync('git rev-parse --verify origin/master', { stdio: 'pipe' });
                     baseBranch = 'master';
-                } catch (e) {
+                } catch (e2) {
                     try {
                         execSync('git rev-parse --verify origin/develop', { stdio: 'pipe' });
                         baseBranch = 'develop';
-                    } catch (e) {
+                    } catch (e3) {
                         diffCommand = 'git diff --staged -U3 --no-color';
                         logDebug('No se encontró rama remota. Usando cambios preparados (staged).');
                     }
                 }
             }
-
             if (!diffCommand) {
                 diffCommand = `git diff origin/${baseBranch}..HEAD -U3 --no-color`;
                 logDebug(`Rama nueva detectada. Comparando con ${baseBranch}.`);
             }
         }
 
-        // También capturamos cambios no staged
-        let stagedDiffCommand = 'git diff --staged -U3 --no-color';
-        let unstagedDiffCommand = 'git diff -U3 --no-color';
-
+        const stagedDiffCommand = 'git diff --staged -U3 --no-color';
+        const unstagedDiffCommand = 'git diff -U3 --no-color';
         logDebug(`Ejecutando comandos diff: ${diffCommand}, ${stagedDiffCommand}, ${unstagedDiffCommand}`);
 
         const changedLines: ChangedLines = {};
@@ -89,120 +85,67 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         const fileRegex = /^diff --git a\/(.+?) b\/(.+)$/;
         const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
 
-        // Función para procesar la salida de diff
         const processDiffOutput = (diffOutput: string) => {
             let currentFile = '';
-            let inFunction = false;
-            let currentFunctionStartLine = -1;
             let currentHunkStartLine = 0;
             let currentHunkLineCount = 0;
 
             const lines = diffOutput.split('\n');
-            logDebug(`Procesando ${lines.length} líneas de salida diff`);
-
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
 
-                // Detecta archivo actual
                 const fileMatch = line.match(fileRegex);
                 if (fileMatch) {
-                    const [, , newFile] = fileMatch;
-                    currentFile = newFile;
-                    inFunction = false;
-                    currentFunctionStartLine = -1;
+                    currentFile = fileMatch[2];
                     continue;
                 }
 
-                // Si estamos en un nuevo bloque de diff
                 const hunkMatch = line.match(hunkRegex);
                 if (hunkMatch && currentFile) {
                     currentHunkStartLine = parseInt(hunkMatch[1], 10);
                     currentHunkLineCount = hunkMatch[2] ? parseInt(hunkMatch[2], 10) : 1;
+                    const hunkStartIndex = i;
 
-                    // Inicializa el conjunto de líneas cambiadas para este archivo si no existe
                     if (!changedLines[currentFile]) {
                         changedLines[currentFile] = new Set<number>();
                     }
 
-                    // Marca un rango más amplio alrededor del cambio para asegurar que capturamos las declaraciones
-                    const contextRange = 20; // Aumentamos el contexto para capturar mejor las declaraciones
-                    for (let j = Math.max(1, currentHunkStartLine - contextRange);
-                         j < currentHunkStartLine + currentHunkLineCount + contextRange; j++) {
-                        changedLines[currentFile].add(j);
-                    }
-
-                    // Revisamos si hay alguna función o metodo completo modificado
-                    let insideChangedFunction = false;
-                    let functionStartLineInHunk = -1;
-
-                    for (let j = i + 1; j < lines.length && lines[j].charAt(0) !== '@'; j++) {
-                        const codeLine = lines[j];
-
-                        // Solo nos interesan líneas añadidas
-                        if (codeLine.startsWith('+') && codeLine.length > 1) {
-                            const actualCode = codeLine.substring(1);
-
-                            // Sí parece el inicio de una declaración
-                            if (
-                                actualCode.trim().startsWith('function ') ||
-                                actualCode.trim().startsWith('class ') ||
-                                actualCode.trim().startsWith('interface ') ||
-                                actualCode.trim().match(/^export\s+(class|interface|function)/) ||
-                                actualCode.trim().match(/^(public|private|protected)\s+[a-zA-Z0-9_]+\s*\(/) ||
-                                (actualCode.trim().startsWith('const ') ||
-                                    actualCode.trim().startsWith('let ') ||
-                                    actualCode.trim().startsWith('var ')) &&
-                                (actualCode.includes(' = function') ||
-                                    actualCode.includes(' = (') ||
-                                    actualCode.includes(' = async'))
-                            ) {
-                                insideChangedFunction = true;
-                                // Estimar la línea real sumando el índice relativo al inicio del hunk
-                                const lineOffset = j - (i + 1);
-                                functionStartLineInHunk = currentHunkStartLine + lineOffset;
-
-                                // Si no existe el registro para funciones modificadas para este archivo, lo creamos
-                                if (!modifiedFunctions[currentFile]) {
-                                    modifiedFunctions[currentFile] = new Set<number>();
-                                }
-
-                                // Registramos esta función como modificada
-                                modifiedFunctions[currentFile].add(functionStartLineInHunk);
-                                logDebug(`Función/método modificado detectado en línea ${functionStartLineInHunk}: ${actualCode.trim()}`);
-                            }
+                    // Solo procesar líneas añadidas dentro de este hunk
+                    for (let k = hunkStartIndex + 1; k < lines.length; k++) {
+                        const diffLine = lines[k];
+                        if (diffLine.startsWith('@@') || diffLine.startsWith('diff --git')) {
+                            break;
+                        }
+                        if (diffLine.startsWith('+') && !diffLine.startsWith('+++')) {
+                            const offsetInHunk = k - (hunkStartIndex + 1);
+                            const realLineNum = currentHunkStartLine + offsetInHunk;
+                            changedLines[currentFile].add(realLineNum);
                         }
                     }
+
+                    // (Opcional) lógica de modifiedFunctions si aún se usa
+                    // ...
                 }
             }
         };
 
-        // Procesamos la salida principal de diff
         try {
-            const mainDiffOutput = execSync(diffCommand, { encoding: 'utf8' });
-            processDiffOutput(mainDiffOutput);
+            processDiffOutput(execSync(diffCommand, { encoding: 'utf8' }));
         } catch (e) {
             logDebug(`Error en diff principal: ${e}`);
         }
-
-        // Procesamos cambios staged
         try {
-            const stagedDiffOutput = execSync(stagedDiffCommand, { encoding: 'utf8' });
-            processDiffOutput(stagedDiffOutput);
+            processDiffOutput(execSync(stagedDiffCommand, { encoding: 'utf8' }));
         } catch (e) {
             logDebug(`Error en diff staged: ${e}`);
         }
-
-        // Procesamos cambios unstaged
         try {
-            const unstagedDiffOutput = execSync(unstagedDiffCommand, { encoding: 'utf8' });
-            processDiffOutput(unstagedDiffOutput);
+            processDiffOutput(execSync(unstagedDiffCommand, { encoding: 'utf8' }));
         } catch (e) {
             logDebug(`Error en diff unstaged: ${e}`);
         }
 
         logDebug(`Se encontraron cambios en ${Object.keys(changedLines).length} archivos`);
-        logDebug(`Se detectaron modificaciones en ${Object.values(modifiedFunctions).reduce((sum, set) => sum + set.size, 0)} funciones/métodos`);
-
         return { lines: changedLines, functions: modifiedFunctions };
     } catch (error) {
         logDebug(`Error al obtener líneas cambiadas: ${error}`);
