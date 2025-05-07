@@ -40,7 +40,7 @@ class Usuario {
     /**
      * Extracts the domain from the user's email address.
      *
-     * @returns The domain part of the user's email, or an empty string if not found.
+     * @returns cambio esto al español.
      */
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
