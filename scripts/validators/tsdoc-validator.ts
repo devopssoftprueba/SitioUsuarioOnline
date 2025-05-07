@@ -87,7 +87,6 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         const processDiffOutput = (diffOutput: string) => {
             let currentFile = '';
             const lines = diffOutput.split('\n');
-            let currentLineInHunk = 0;
             let newLineNumber = 0;
 
             for (let i = 0; i < lines.length; i++) {
@@ -95,29 +94,28 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
 
                 const fileMatch = line.match(fileRegex);
                 if (fileMatch) {
-                    currentFile = fileMatch[2];
+                    const [, , newFile] = fileMatch;
+                    currentFile = newFile;
                     continue;
                 }
 
                 const hunkMatch = line.match(hunkRegex);
-                if (hunkMatch) {
+                if (hunkMatch && currentFile) {
                     newLineNumber = parseInt(hunkMatch[1], 10);
-                    currentLineInHunk = 0;
+                    if (!changedLines[currentFile]) {
+                        changedLines[currentFile] = new Set<number>();
+                    }
                     continue;
                 }
 
-                if (!changedLines[currentFile]) {
-                    changedLines[currentFile] = new Set<number>();
-                }
+                if (!currentFile || !changedLines[currentFile]) continue;
 
-                if (
-                    (line.startsWith('+') && !line.startsWith('+++')) ||
-                    (line.startsWith('-') && !line.startsWith('---'))
-                ) {
+                if (line.startsWith('+') && !line.startsWith('+++')) {
                     changedLines[currentFile].add(newLineNumber);
-                }
-
-                if (!line.startsWith('-')) {
+                    newLineNumber++;
+                } else if (line.startsWith('-') && !line.startsWith('---')) {
+                    changedLines[currentFile].add(newLineNumber); // Línea eliminada (referenciada por su número en nuevo archivo)
+                } else {
                     newLineNumber++;
                 }
             }
@@ -141,15 +139,13 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
             logDebug(`Error en diff unstaged: ${e}`);
         }
 
+        logDebug(`Se encontraron cambios en ${Object.keys(changedLines).length} archivos`);
         return { lines: changedLines, functions: modifiedFunctions };
     } catch (error) {
         logDebug(`Error al obtener líneas cambiadas: ${error}`);
         return { lines: {}, functions: {} };
-
     }
-
 }
-
 /**
  * Determina el tipo de declaración basado en la línea de código.
  *
