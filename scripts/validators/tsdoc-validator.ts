@@ -1,7 +1,7 @@
 // Importa la función execSync del módulo child_process para ejecutar comandos de terminal
 import { execSync } from 'child_process';
-// Importa las funciones readFileSync y existsSync del módulo fs para leer archivos y verificar su existencia
-import { readFileSync, existsSync } from 'fs';
+// Importa las funciones readFileSync del módulo fs para leer archivos y verificar su existencia
+import { readFileSync } from 'fs';
 // Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
 
@@ -88,7 +88,6 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
 
         const fileRegex = /^diff --git a\/(.+?) b\/(.+)$/;
         const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
-        const functionStartRegex = /^[\+\-](\s*(?:export\s+)?(?:async\s+)?(?:function|class|interface|const|let|var|public|private|protected))/;
 
         // Función para procesar la salida de diff
         const processDiffOutput = (diffOutput: string) => {
@@ -143,7 +142,7 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
                         if (codeLine.startsWith('+') && codeLine.length > 1) {
                             const actualCode = codeLine.substring(1);
 
-                            // Si parece el inicio de una declaración
+                            // Sí parece el inicio de una declaración
                             if (
                                 actualCode.trim().startsWith('function ') ||
                                 actualCode.trim().startsWith('class ') ||
@@ -417,74 +416,75 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
  * @param type - Tipo de declaración
  * @returns Lista de errores encontrados
  */
-function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] {
+function validateDocumentation(
+    lines: string[],
+    declarationIndex: number,
+    type: keyof typeof rules
+): string[] {
     let i = declarationIndex - 1;
 
-    // Saltamos líneas en blanco, imports y decoradores
+    // 1) Avanzar hacia arriba hasta encontrar '*/' o código que rompa el bloque de comentarios
     while (i >= 0) {
-        const trimmedLine = lines[i].trim();
+        const trimmed = lines[i].trim();
 
-        // Si encontramos otra declaración o código ejecutable antes de un bloque de comentarios
-        // significa que la declaración actual no tiene documentación
-        if (trimmedLine !== '' &&
-            !trimmedLine.startsWith('@') && // Saltamos decoradores
-            !trimmedLine.startsWith('import ') && // Saltamos imports
-            !trimmedLine.startsWith('//') && // Saltamos comentarios de línea
-            !trimmedLine.startsWith('*/') && // Saltamos cierres de comentario
-            !trimmedLine.match(/^\s*$/) // Saltamos líneas en blanco
+        // Si hay código, imports o decoradores antes de un cierre, no hay TSDoc
+        if (
+            trimmed !== '' &&
+            !trimmed.startsWith('@') &&
+            !trimmed.startsWith('import ') &&
+            !trimmed.startsWith('//') &&
+            !trimmed.startsWith('*/') &&
+            !trimmed.match(/^\s*$/)
         ) {
-            // Si llegamos a código que no es comentario, imports o decoradores,
-            // no hay documentación asociada
             return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
         }
 
-        // Si encontramos un cierre de comentario, es probable que sea nuestra documentación
-        if (trimmedLine === '*/') {
+        if (trimmed === '*/') {
             break;
         }
-
         i--;
     }
 
-    // Si llegamos al inicio del archivo sin encontrar documentación
+    // Si llegamos al inicio sin ver '*/'
     if (i < 0) {
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
     }
 
-    // Ahora buscamos el inicio del bloque de comentarios
+    // 2) Buscar el inicio '/**'
     let startCommentIndex = i;
     while (startCommentIndex >= 0 && !lines[startCommentIndex].trim().startsWith('/**')) {
         startCommentIndex--;
     }
-
     if (startCommentIndex < 0) {
         return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de ${type}.`];
     }
 
+    // 3) Extraer bloque de comentarios
     const commentBlock = lines.slice(startCommentIndex, i + 1).join('\n');
     const errors: string[] = [];
+    const declLine = lines[declarationIndex].trim();
 
-    const originalDeclaration = lines[declarationIndex];
-
-    // El resto de la validación (parámetros, retornos, idioma) queda igual
+    // 4) Validar @param y @returns/@return en funciones y clases
     if (type === 'function' || type === 'class') {
-        const hasParameters = originalDeclaration.includes('(') &&
-            !originalDeclaration.includes('()') &&
-            !originalDeclaration.includes('( )');
-
-        if (hasParameters && !commentBlock.includes('@param')) {
+        // Parámetros
+        const hasParams =
+            declLine.includes('(') &&
+            !declLine.includes('()') &&
+            !declLine.includes('( )');
+        if (hasParams && !commentBlock.includes('@param')) {
             errors.push(`Error: La declaración tiene parámetros pero falta documentación con etiquetas @param.`);
         }
 
-        if (type === 'function' &&
-            originalDeclaration.includes('): ') &&
-            !originalDeclaration.includes('): void') &&
-            !commentBlock.includes('@returns') &&
-            !commentBlock.includes('@return')) {
-            errors.push(`Error: La función parece devolver un valor pero falta la etiqueta @returns.`);
+        // Retorno de valor (no void)
+        if (type === 'function') {
+            const returnsValue = /:\s*(?!void\b)[\w<>{}\[\]]+/.test(declLine);
+            if (returnsValue && !commentBlock.includes('@returns') && !commentBlock.includes('@return')) {
+                errors.push(`Error: La función parece devolver un valor pero falta la etiqueta @returns.`);
+            }
         }
     }
 
+    // 5) Validar que la documentación esté en inglés
     const languageErrors = validateEnglishDocumentation(commentBlock);
     if (languageErrors.length > 0) {
         errors.push(...languageErrors);
@@ -494,78 +494,78 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
 }
 
 /**
+ * Comprueba si la línea dada forma parte de un bloque /** … *\/
+ */
+function isInsideComment(lines: string[], lineIndex: number): boolean {
+    // busca hacia arriba el inicio /** y hacia abajo el cierre */
+    let i = lineIndex;
+    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
+        if (lines[i].trim().endsWith('*/')) return false;
+        i--;
+    }
+    if (i < 0) return false;
+    let j = lineIndex;
+    while (j < lines.length && !lines[j].trim().endsWith('*/')) {
+        j++;
+    }
+    return j < lines.length;
+}
+
+
+/**
  * Válida un archivo verificando la documentación correcta en los cambios.
  *
  * @param filePath - Ruta del archivo.
  * @param changed - Líneas cambiadas.
  * @returns Lista de errores encontrados.
  */
-function validateFile(filePath: string, changed: Set<number>, modifiedFunctions: Set<number> = new Set()): string[] {
+function validateFile(filePath: string, changed: Set<number>): string[] {
     const errors: string[] = [];
+    const fileContent = readFileSync(filePath, 'utf8');
+    const lines = fileContent.split('\n');
 
-    try {
-        if (!existsSync(filePath)) {
-            logDebug(`Archivo eliminado: ${filePath}`);
-            return [`Archivo eliminado (informativo): ${filePath}`];
-        }
+    const commentChanges = new Set<number>();
+    const codeChanges = new Set<number>();
 
-        const fileContent = readFileSync(filePath, 'utf8');
-        const lines = fileContent.split('\n');
-
-        const declarations: Array<{ index: number; type: keyof typeof rules }> = [];
-
-        // Procesamos las líneas específicas modificadas
-        changed.forEach(lineNumber => {
-            const lineIndex = lineNumber - 1;
-            if (lineIndex < 0 || lineIndex >= lines.length) return;
-
-            // Intentamos encontrar la declaración asociada a esta línea
-            const declaration = findDeclarationLine(lines, lineIndex);
-            if (!declaration) {
-                return;
-            }
-
-            // Verificamos si esta declaración ya está en la lista
-            const alreadyIncluded = declarations.some(d => d.index === declaration.index);
-            if (!alreadyIncluded) {
-                declarations.push(declaration);
-                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim().substring(0, 50)}...`);
-            }
-        });
-
-        // Procesamos también las funciones específicamente identificadas como modificadas
-        modifiedFunctions.forEach(lineNumber => {
-            const lineIndex = lineNumber - 1;
-            if (lineIndex < 0 || lineIndex >= lines.length) return;
-
-            // Verificamos si ya está incluida
-            const alreadyIncluded = declarations.some(d => d.index === lineIndex);
-            if (!alreadyIncluded) {
-                const type = determineDeclarationType(lines[lineIndex]);
-                declarations.push({ index: lineIndex, type });
-                logDebug(`Función modificada añadida para validación: ${type} en línea ${lineIndex + 1}`);
-            }
-        });
-
-        // Validamos todas las declaraciones encontradas
-        declarations.forEach(({ index: declarationIndex, type }) => {
-            logDebug(`Validando ${type} en línea ${declarationIndex + 1} en ${filePath}`);
-
-            const validationErrors = validateDocumentation(lines, declarationIndex, type);
-            if (validationErrors.length > 0) {
-                const codeLine = lines[declarationIndex].trim();
-                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine.substring(0, 50)}${codeLine.length > 50 ? '...' : ''}`);
-                errors.push(...validationErrors.map(e => `  - ${e}`));
-            }
-        });
-
-        return errors;
-    } catch (error) {
-        logDebug(`Error al validar archivo ${filePath}: ${error}`);
-        return [`Error al validar archivo ${filePath}: ${error}`];
+    // 1) Clasificar líneas cambiadas
+    for (const num of changed) {
+        const idx = num - 1;
+        if (idx < 0 || idx >= lines.length) continue;
+        if (isInsideComment(lines, idx)) commentChanges.add(idx);
+        else codeChanges.add(idx);
     }
-}
 
+    const declarations: Array<{ index: number; type: keyof typeof rules }> = [];
+
+    // 2) Para cada cambio en comentario, busca la declaración abajo
+    commentChanges.forEach(idx => {
+        // empieza justo debajo del bloque de comentario
+        const decl = findDeclarationLine(lines, idx + 1);
+        if (decl && !declarations.some(d => d.index === decl.index)) {
+            declarations.push(decl);
+        }
+    });
+
+    // 3) Para cada cambio en código, busca la declaración arriba
+    codeChanges.forEach(idx => {
+        const decl = findDeclarationLine(lines, idx);
+        if (decl && !declarations.some(d => d.index === decl.index)) {
+            declarations.push(decl);
+        }
+    });
+
+    // 4) Validar solo esas declaraciones
+    for (const { index, type } of declarations) {
+        const validationErrors = validateDocumentation(lines, index, type);
+        if (validationErrors.length > 0) {
+            const codeLine = lines[index].trim();
+            errors.push(`Error en línea ${index + 1}: ${codeLine}`);
+            validationErrors.forEach(e => errors.push(`  - ${e}`));
+        }
+    }
+
+    return errors;
+}
 /**
  * Ejecuta la validación en todos los archivos con cambios.
  *
@@ -573,7 +573,7 @@ function validateFile(filePath: string, changed: Set<number>, modifiedFunctions:
  */
 function runValidation(): boolean {
     try {
-        const { lines: changedLines, functions: modifiedFunctions } = getChangedLines();
+        const { lines: changedLines} = getChangedLines();
         let validationResult = true;
         const errorsByFile: Record<string, string[]> = {};
         let totalErrors = 0;
@@ -597,8 +597,7 @@ function runValidation(): boolean {
             logDebug(`Validando archivo: ${fullPath}`);
 
             // Obtenemos las funciones modificadas para este archivo
-            const fileFunctions = modifiedFunctions[file] || new Set<number>();
-            const errors = validateFile(fullPath, changedLines[file], fileFunctions);
+            const errors = validateFile(fullPath, changedLines[file]);
 
             if (errors.length > 0) {
                 const realErrors = errors.filter(err => !err.includes('Archivo eliminado (informativo)'));
