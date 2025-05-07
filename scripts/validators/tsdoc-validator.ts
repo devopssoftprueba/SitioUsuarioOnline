@@ -497,6 +497,24 @@ function isInsideComment(lines: string[], lineIndex: number): boolean {
     return j < lines.length;
 }
 
+/**
+ * Para cada línea de comentario modificada, valida su bloque y
+ * devuelve errores (vacío si no los hay).
+ */
+function validateCommentChange(
+    lines: string[],
+    commentLineIdx: number
+): string[] {
+    // 1) Encuentra la declaración correspondiente justo debajo
+    const decl = findDeclarationLine(lines, commentLineIdx + 1);
+    if (!decl) {
+        return ['Error: Bloque de documentación modificado sin declaración asociada.'];
+    }
+
+    // 2) Invoca la validación real pasando decl.index y decl.type
+    return validateDocumentation(lines, decl.index, decl.type);
+}
+
 
 /**
  * Válida un archivo verificando la documentación correcta en los cambios.
@@ -505,50 +523,55 @@ function isInsideComment(lines: string[], lineIndex: number): boolean {
  * @param changed - Líneas cambiadas.
  * @returns Lista de errores encontrados.
  */
-function validateFile(filePath: string, changed: Set<number>): string[] {
+function validateFile(
+    filePath: string,
+    changed: Set<number>
+): string[] {
     const errors: string[] = [];
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
 
+    // 1) Separar cambios en comentarios vs. cambios en código
     const commentChanges = new Set<number>();
-    const codeChanges = new Set<number>();
-
-    // 1) Clasificar líneas cambiadas
+    const codeChanges    = new Set<number>();
     for (const num of changed) {
         const idx = num - 1;
         if (idx < 0 || idx >= lines.length) continue;
         if (isInsideComment(lines, idx)) commentChanges.add(idx);
-        else codeChanges.add(idx);
+        else                              codeChanges.add(idx);
     }
 
-    const declarations: Array<{ index: number; type: keyof typeof rules }> = [];
-
-    // 2) Para cada cambio en comentario, busca la declaración abajo
+    // 2) Procesar cambios en documentación
     commentChanges.forEach(idx => {
-        // empieza justo debajo del bloque de comentario
-        const decl = findDeclarationLine(lines, idx + 1);
-        if (decl && !declarations.some(d => d.index === decl.index)) {
-            declarations.push(decl);
+        // Usa el helper para validar el cambio de comentario
+        const docErrors = validateCommentChange(lines, idx);
+        if (docErrors.length > 0) {
+            // Encuentra de nuevo la declaración para reportar la línea correcta
+            const decl = findDeclarationLine(lines, idx + 1);
+            const reportLine = decl ? decl.index + 1 : idx + 1;
+            const reportCode = decl
+                ? lines[decl.index].trim()
+                : lines[idx].trim();
+
+            errors.push(`Error en línea ${reportLine}: ${reportCode}`);
+            docErrors.forEach(e => errors.push(`  - ${e}`));
         }
     });
 
-    // 3) Para cada cambio en código, busca la declaración arriba
+    // 3) Procesar cambios en código
     codeChanges.forEach(idx => {
         const decl = findDeclarationLine(lines, idx);
-        if (decl && !declarations.some(d => d.index === decl.index)) {
-            declarations.push(decl);
+        if (!decl) return;
+
+        const docErrors = validateDocumentation(lines, decl.index, decl.type);
+        if (docErrors.length > 0) {
+            const reportLine = decl.index + 1;
+            const reportCode = lines[decl.index].trim();
+
+            errors.push(`Error en línea ${reportLine}: ${reportCode}`);
+            docErrors.forEach(e => errors.push(`  - ${e}`));
         }
     });
-
-    // 4) Validar solo esas declaraciones
-    for (const { index, type } of declarations) {
-        const validationErrors = validateDocumentation(lines, index, type);
-        if (validationErrors.length > 0) {
-            const codeLine = lines[index].trim();
-            errors.push(`Error en línea ${index + 1}: ${codeLine}`);
-            validationErrors.forEach(e => errors.push(`  - ${e}`));
-        }
-    }
 
     return errors;
 }
