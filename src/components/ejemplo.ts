@@ -37,11 +37,7 @@ class Usuario {
         return `Hola, ${this.nombre}!`;
     }
 
-    /**
-     * Retrieves the domain part of the user's email address.
-     *
-     * @returns The domain of the email (everything after the '@' symbol), or an empty string if not available.
-     */
+
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
         return partesCorreo.length > 1 ? partesCorreo[1] : '';
