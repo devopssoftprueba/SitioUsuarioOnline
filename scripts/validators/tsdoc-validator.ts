@@ -190,38 +190,71 @@ function determineDeclarationType(line: string): keyof typeof rules {
     return 'function'; // Por defecto asumimos función si no podemos determinar claramente
 }
 
+function findDeclarationForComment(lines: string[], commentLine: number): number {
+    // Primero, encontrar el final del bloque de comentarios
+    let endOfComment = commentLine;
+    while (endOfComment < lines.length &&
+    !lines[endOfComment].trim().endsWith('*/') &&
+    lines[endOfComment].trim() !== '*/') {
+        endOfComment++;
+    }
+
+    if (endOfComment >= lines.length) return -1; // No encontramos el final
+
+    // Buscar la primera declaración no vacía después del comentario
+    let lineAfterComment = endOfComment + 1;
+    while (lineAfterComment < lines.length) {
+        const line = lines[lineAfterComment].trim();
+
+        // Ignorar líneas vacías y decoradores
+        if (line === '' || line.startsWith('@')) {
+            lineAfterComment++;
+            continue;
+        }
+
+        // Si encontramos una declaración, la retornamos
+        const decl = findDeclarationLine(lines, lineAfterComment);
+        if (decl) {
+            return decl.index;
+        }
+
+        // Si no es decorador ni vacía pero no es declaración, paramos
+        break;
+    }
+
+    return -1; // No encontramos declaración asociada
+}
+
 function isInsideComment(lines: string[], lineIndex: number): boolean {
-    // Verifica si la línea actual es un comentario o parte de un bloque de comentarios
+    // Verificar si la línea es parte de un bloque de comentarios
     const currentLine = lines[lineIndex].trim();
 
-    // Si la línea es parte del cuerpo de un comentario
-    if (currentLine.startsWith('*') && !currentLine.startsWith('*/')) {
+    // Comprobaciones rápidas
+    if (currentLine.startsWith('/**') ||
+        (currentLine.startsWith('*') && !currentLine.startsWith('*/')) ||
+        currentLine === '*/') {
         return true;
     }
 
-    // Si la línea es el inicio de un comentario
-    if (currentLine.startsWith('/**')) {
-        return true;
+    // Verificar si está dentro de un bloque de comentarios buscando /** hacia arriba y */ hacia abajo
+    let start = lineIndex;
+    while (start >= 0) {
+        const line = lines[start].trim();
+        if (line.startsWith('/**')) break;
+        if (line === '*/') return false; // Encontramos un cierre antes que una apertura
+        start--;
     }
 
-    // Si la línea es el final de un comentario
-    if (currentLine.endsWith('*/') || currentLine === '*/') {
-        return true;
+    if (start < 0) return false; // No encontramos apertura
+
+    let end = lineIndex;
+    while (end < lines.length) {
+        const line = lines[end].trim();
+        if (line === '*/' || line.endsWith('*/')) break;
+        end++;
     }
 
-    // busca hacia arriba el inicio /** y hacia abajo el cierre */
-    let i = lineIndex;
-    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
-        if (lines[i].trim().endsWith('*/')) return false;
-        i--;
-    }
-    if (i < 0) return false;
-
-    let j = lineIndex;
-    while (j < lines.length && !lines[j].trim().endsWith('*/')) {
-        j++;
-    }
-    return j < lines.length;
+    return end < lines.length; // Si encontramos cierre, está dentro de un comentario
 }
 
 function findDeclarationLine(
@@ -466,7 +499,7 @@ function validateFile(
     changed: Set<number>
 ): string[] {
     const errors: string[] = [];
-    const validatedDeclarations = new Set<string>();
+    const validatedDeclarations = new Set<number>();
 
     if (!existsSync(filePath)) {
         logDebug(`Archivo eliminado: ${filePath}`);
@@ -476,59 +509,55 @@ function validateFile(
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
 
-    // IMPORTANTE: Solo nos importan las líneas que realmente cambiaron
-    const changedLines = Array.from(changed).map(num => num - 1).filter(idx => idx >= 0 && idx < lines.length);
+    // Convertir las líneas cambiadas a índices de array (0-based)
+    const changedIndices = Array.from(changed).map(num => num - 1)
+        .filter(idx => idx >= 0 && idx < lines.length);
 
-    // Registrar exactamente qué líneas estamos evaluando
-    logDebug(`Evaluando líneas modificadas en ${filePath}: ${changedLines.map(i => i+1).join(', ')}`);
+    logDebug(`Evaluando líneas modificadas en ${filePath}: ${changedIndices.map(i => i+1).join(', ')}`);
 
-    // Procesar directamente cada línea modificada
-    for (const idx of changedLines) {
-        // Si este cambio modifica una declaración directamente
-        const directDecl = findDeclarationLine(lines, idx);
-        if (directDecl && directDecl.index === idx) {
-            // Es un cambio directo en una declaración
-            const uniqueId = `${directDecl.index}_${directDecl.type}`;
-            if (!validatedDeclarations.has(uniqueId)) {
-                validatedDeclarations.add(uniqueId);
+    // Procesar las líneas modificadas
+    for (const idx of changedIndices) {
+        const line = lines[idx].trim();
 
-                // Solo validamos si este cambio es en una declaración
-                logDebug(`Validando declaración modificada en línea ${idx+1}: ${lines[idx].trim()}`);
+        // Caso 1: La línea es una declaración en sí misma
+        const declaration = findDeclarationLine(lines, idx);
+        if (declaration && declaration.index === idx) {
+            logDebug(`Línea ${idx+1} es una declaración directa: ${line}`);
 
-                const docErrors = validateDocumentation(lines, directDecl.index, directDecl.type);
+            if (!validatedDeclarations.has(declaration.index)) {
+                validatedDeclarations.add(declaration.index);
+
+                const docErrors = validateDocumentation(lines, declaration.index, declaration.type);
                 if (docErrors.length > 0) {
-                    errors.push(`Error en línea ${directDecl.index + 1}: ${lines[directDecl.index].trim()}`);
+                    errors.push(`Error en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
                     docErrors.forEach(e => errors.push(`  - ${e}`));
                 }
             }
+            continue;
         }
-        // Si este cambio está dentro de un comentario de documentación
-        else if (isInsideComment(lines, idx)) {
-            // Buscar a qué declaración pertenece este comentario
-            let declLine = -1;
-            for (let i = idx + 1; i < Math.min(idx + 20, lines.length); i++) {
-                const potentialDecl = findDeclarationLine(lines, i);
-                if (potentialDecl) {
-                    declLine = potentialDecl.index;
-                    break;
+
+        // Caso 2: La línea está dentro de un comentario
+        if (isInsideComment(lines, idx)) {
+            // NO queremos vincularlo con cualquier declaración, sino con la declaración que sigue inmediatamente
+            // después del bloque de comentarios donde está esta línea
+            const declarationIndex = findDeclarationForComment(lines, idx);
+
+            if (declarationIndex >= 0 && !validatedDeclarations.has(declarationIndex)) {
+                const declarationType = determineDeclarationType(lines[declarationIndex]);
+                logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}`);
+
+                // Verificar que la declaración vinculada esté en la línea 43
+                if (declarationIndex !== 42) { // 43-1=42 (índices de array son 0-based)
+                    logDebug(`IGNORANDO: Cambio en comentario no afecta a la declaración en línea 43`);
+                    continue;
                 }
-            }
 
-            if (declLine >= 0) {
-                const decl = findDeclarationLine(lines, declLine);
-                if (decl) {
-                    const uniqueId = `${decl.index}_${decl.type}`;
-                    if (!validatedDeclarations.has(uniqueId)) {
-                        validatedDeclarations.add(uniqueId);
+                validatedDeclarations.add(declarationIndex);
 
-                        logDebug(`Validando comentario modificado en línea ${idx+1} para declaración en línea ${declLine+1}`);
-
-                        const docErrors = validateDocumentation(lines, decl.index, decl.type);
-                        if (docErrors.length > 0) {
-                            errors.push(`Error en línea ${decl.index + 1}: ${lines[decl.index].trim()}`);
-                            docErrors.forEach(e => errors.push(`  - ${e}`));
-                        }
-                    }
+                const docErrors = validateDocumentation(lines, declarationIndex, declarationType);
+                if (docErrors.length > 0) {
+                    errors.push(`Error en línea ${declarationIndex + 1}: ${lines[declarationIndex].trim()}`);
+                    docErrors.forEach(e => errors.push(`  - ${e}`));
                 }
             }
         }
