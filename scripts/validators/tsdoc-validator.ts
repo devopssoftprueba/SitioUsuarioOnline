@@ -1,7 +1,11 @@
 import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import * as path from 'path';
+import * as fs from "node:fs";
 
+/**
+ * Reglas de validación para TSDoc
+ */
 const rules = {
     class: {
         requiredTags: ['@description'],
@@ -17,6 +21,77 @@ const rules = {
     }
 };
 
+/**
+ * Valida que las etiquetas requeridas existan y contengan información válida.
+ */
+function validateDocumentationContent(commentBlock: string, type: keyof typeof rules): string[] {
+    const errors: string[] = [];
+    const lines = commentBlock.split('\n').map(line => line.trim());
+
+    rules[type].requiredTags.forEach(tag => {
+        const matchingLine = lines.find(line => line.startsWith(tag));
+
+        if (!matchingLine) {
+            errors.push(`⚠️ Falta la etiqueta requerida '${tag}' en la documentación de '${type}'.`);
+        } else {
+            // Verifica que el contenido después de la etiqueta no esté vacío o sea inválido
+            const content = matchingLine.replace(tag, '').trim();
+            if (!content || content === '[TODO]' || content.length < 3) {
+                errors.push(`⚠️ La etiqueta '${tag}' existe pero tiene contenido inválido o insuficiente en la documentación de '${type}'.`);
+            }
+        }
+    });
+
+    return errors;
+}
+
+/**
+ * Valida una línea específica y verifica que cumpla las reglas de TSDoc.
+ */
+function validateDocumentation(
+    lines: string[],
+    declarationIndex: number,
+    type: keyof typeof rules,
+    changedLines: Set<number>
+): string[] {
+    const errors: string[] = [];
+    let i = declarationIndex;
+
+    // Retrocede para intentar encontrar el bloque de comentario TSDoc asociado
+    while (i >= 0) {
+        if (!changedLines.has(i + 1)) break; // Solo analiza líneas modificadas
+        const line = lines[i]?.trim() || '';
+
+        if (line.startsWith('/**')) break;
+
+        if (line !== '' && !line.startsWith('//')) {
+            errors.push(
+                `⚠️ Error: Falta documentación TSDoc sobre la declaración de tipo '${type}' en la línea ${declarationIndex + 1}.`
+            );
+            return errors;
+        }
+
+        i--;
+    }
+
+    // Si no encontró un bloque de comentario TSDoc
+    if (i < 0) {
+        errors.push(
+            `⚠️ Error: No se encontró comentario TSDoc asociado a la declaración de tipo '${type}' en la línea ${declarationIndex + 1}.`
+        );
+        return errors;
+    }
+
+    const commentBlock = lines.slice(i, declarationIndex).join('\n');
+
+    // Validar contenido del bloque de comentarios
+    const contentErrors = validateDocumentationContent(commentBlock, type);
+    if (contentErrors.length > 0) {
+        errors.push(...contentErrors);
+    }
+
+    return errors;
+}
 type ChangedLines = Record<string, Set<number>>;
 
 function logDebug(message: string): void {
@@ -106,71 +181,6 @@ function determineDeclarationType(line: string): keyof typeof rules | null {
     return null;
 }
 
-function validateDocumentation(
-    lines: string[],
-    declarationIndex: number,
-    type: keyof typeof rules,
-    changedLines: Set<number>
-): string[] {
-    const errors: string[] = [];
-    let i = declarationIndex;
-
-    while (i >= 0) {
-        if (!changedLines.has(i + 1)) break; // Solo procesa líneas modificadas
-        const line = lines[i]?.trim() || '';
-
-        if (line.startsWith('/**')) break;
-
-        if (line !== '' && !line.startsWith('//')) {
-            errors.push(
-                `⚠️ Error: Falta documentación TSDoc sobre la declaración de tipo '${type}' en la línea ${declarationIndex + 1}.`
-            );
-            return errors;
-        }
-
-        i--;
-    }
-
-    if (i < 0) {
-        errors.push(
-            `⚠️ Error: No se encontró comentario TSDoc asociado a la declaración de tipo '${type}' en la línea ${declarationIndex + 1}.`
-        );
-        return errors;
-    }
-
-    const commentBlock = lines.slice(i, declarationIndex).join('\n');
-    rules[type].requiredTags.forEach((tag) => {
-        if (!commentBlock.includes(tag)) {
-            errors.push(`⚠️ Error: Falta la etiqueta '${tag}' en la documentación de la ${type}.`);
-        }
-    });
-
-    return errors;
-}
-
-function validateFile(filePath: string, changedLines: Set<number>): string[] {
-    const errors: string[] = [];
-
-    if (!existsSync(filePath)) {
-        return [`Archivo inexistente: ${filePath}`];
-    }
-
-    const content = readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
-    const changedIndices = Array.from(changedLines).map((line) => line - 1);
-
-    changedIndices.forEach((index) => {
-        const declType = determineDeclarationType(lines[index] || '');
-        if (!declType) return;
-
-        const fileErrors = validateDocumentation(lines, index, declType, changedLines);
-        if (fileErrors.length > 0) {
-            errors.push(...fileErrors);
-        }
-    });
-
-    return errors;
-}
 
 function runValidation(): boolean {
     try {
@@ -196,7 +206,12 @@ function runValidation(): boolean {
             const fullPath = path.resolve(file);
             logDebug(`📄 Validando archivo: ${fullPath}`);
 
-            const errors = validateFile(fullPath, changedLines[file]);
+            const errors = validateDocumentation(
+                fs.readFileSync(fullPath, 'utf8').split('\n'),
+                0,
+                determineDeclarationType(fullPath) || 'property',
+                changedLines[file]
+            );
 
             if (errors.length > 0) {
                 errorsByFile[file] = errors;
