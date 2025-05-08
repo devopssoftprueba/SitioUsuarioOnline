@@ -538,17 +538,36 @@ function validateFile(
 
         // Caso 2: La línea está dentro de un comentario
         if (isInsideComment(lines, idx)) {
-            // NO queremos vincularlo con cualquier declaración, sino con la declaración que sigue inmediatamente
-            // después del bloque de comentarios donde está esta línea
-            const declarationIndex = findDeclarationForComment(lines, idx);
+            // Encontrar la declaración asociada al comentario actual
+            let startOfComment = idx;
+            while (startOfComment >= 0 && !lines[startOfComment].trim().startsWith('/**')) {
+                startOfComment--;
+            }
 
-            if (declarationIndex >= 0 && !validatedDeclarations.has(declarationIndex)) {
-                const declarationType = determineDeclarationType(lines[declarationIndex]);
-                logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}`);
+            // Ahora encontrar la declaración que sigue al comentario
+            let endOfComment = idx;
+            while (endOfComment < lines.length && !lines[endOfComment].trim().endsWith('*/')) {
+                endOfComment++;
+            }
 
-                if (declarationIndex >= 0 && !validatedDeclarations.has(declarationIndex)) {
+            if (endOfComment < lines.length) {
+                // Buscar la primera declaración después del fin del comentario
+                let declarationIndex = endOfComment + 1;
+                while (declarationIndex < lines.length) {
+                    const currentLine = lines[declarationIndex].trim();
+                    if (currentLine !== '' && !currentLine.startsWith('@')) {
+                        const decl = findDeclarationLine(lines, declarationIndex);
+                        if (decl) {
+                            declarationIndex = decl.index;
+                            break;
+                        }
+                    }
+                    declarationIndex++;
+                }
+
+                if (declarationIndex < lines.length && !validatedDeclarations.has(declarationIndex)) {
                     const declarationType = determineDeclarationType(lines[declarationIndex]);
-                    logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}`);
+                    logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}: ${lines[declarationIndex].trim()}`);
 
                     validatedDeclarations.add(declarationIndex);
 
@@ -557,14 +576,6 @@ function validateFile(
                         errors.push(`Error en línea ${declarationIndex + 1}: ${lines[declarationIndex].trim()}`);
                         docErrors.forEach(e => errors.push(`  - ${e}`));
                     }
-                }
-
-                validatedDeclarations.add(declarationIndex);
-
-                const docErrors = validateDocumentation(lines, declarationIndex, declarationType);
-                if (docErrors.length > 0) {
-                    errors.push(`Error en línea ${declarationIndex + 1}: ${lines[declarationIndex].trim()}`);
-                    docErrors.forEach(e => errors.push(`  - ${e}`));
                 }
             }
         }
