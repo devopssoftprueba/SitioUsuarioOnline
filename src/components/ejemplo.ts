@@ -40,7 +40,7 @@ class Usuario {
     /**
      * cambio esto al español
      *
-     *hoaoolaofoa
+     *hoaoolaofoaxdsdfsdfsdf
      */
     obtenerDominioCorreo(): string {
         const partesCorreo = this.correo.split('@');
