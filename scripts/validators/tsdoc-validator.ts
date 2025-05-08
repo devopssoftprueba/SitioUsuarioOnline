@@ -24,13 +24,38 @@ const rules = {
 // Declaración de los tipos utilizados
 type ChangedLines = Record<string, Set<number>>;
 
-// Función para la depuración, imprime mensajes con marcas de tiempo
+/**
+ * Función de logging legible y amigable.
+ */
 function logDebug(message: string): void {
-    console.log(`[${new Date().toISOString()}] ${message}`);
+    console.log(`\n[${new Date().toLocaleTimeString()}] ${message}`);
 }
 
-// Imprime un mensaje indicando que el validador TSDoc está en ejecución
-logDebug('🔍 Validador TSDoc en ejecución (con ajustes críticos)...');
+/**
+ * Función de uso para imprimir mensajes claros y legibles para errores específicos.
+ */
+function logValidationResult(errorsByFile: Record<string, string[]>, totalErrors: number): void {
+    if (totalErrors > 0) {
+        console.log('\n❌ **Errores de validación TSDoc encontrados:**');
+        console.log('------------------------------------------------------------------------------');
+
+        for (const file in errorsByFile) {
+            console.log(`📄 Archivo: ${file}`);
+            console.log('───────────────────────────────────────────────────────────────────────────────');
+
+            errorsByFile[file].forEach((error, index) => {
+                console.log(`${index + 1}. ${error}`);
+            });
+
+            console.log('------------------------------------------------------------------------------');
+        }
+
+        console.log(`\n🔴 Total de errores: ${totalErrors}`);
+        console.log('❗ Por favor, corrige los errores de documentación antes de continuar.');
+    } else {
+        console.log('\n✅ **Validación TSDoc completada sin errores. ¡Buen trabajo!**');
+    }
+}
 
 /**
  * Obtiene las líneas modificadas en los archivos utilizando `git diff`.
@@ -145,7 +170,7 @@ function determineDeclarationType(line: string): keyof typeof rules {
         return 'function';
     }
 
-    if (trimmed.match(/^\w+\s*:\s*\w+/)) {
+    if (trimmed.match(/^[\w]+\s*:\s*[\w]+/)) {
         return 'property';
     }
 
@@ -160,7 +185,7 @@ function validateDocumentation(lines: string[], declarationIndex: number, type: 
     let i = declarationIndex;
 
     while (i >= 0) {
-        const line = lines[i].trim();
+        const line = lines[i]?.trim() || '';
 
         if (line.startsWith('/**')) break;
         if (line !== '' && !line.startsWith('//')) {
@@ -219,27 +244,53 @@ function validateFile(filePath: string, changedLines: Set<number>): string[] {
  * Realiza la validación sobre los archivos cambiados.
  */
 function runValidation(): boolean {
-    const { lines: changedLines } = getChangedLines();
-    let hasErrors = false;
+    try {
+        const { lines: changedLines } = getChangedLines();
+        const errorsByFile: Record<string, string[]> = {};
+        let totalErrors = 0;
 
-    for (const file in changedLines) {
-        const errors = validateFile(path.resolve(file), changedLines[file]);
+        for (const file in changedLines) {
+            if (
+                !file.endsWith('.ts') &&
+                !file.endsWith('.tsx') &&
+                !file.endsWith('.js') &&
+                !file.endsWith('.jsx')
+            ) {
+                logDebug(`ℹ️ Archivo ignorado (no es código fuente): ${file}`);
+                continue;
+            }
 
-        if (errors.length) {
-            hasErrors = true;
-            console.log(`\nErrores detectados en el archivo: ${file}`);
-            errors.forEach(err => console.log(`  ${err}`));
+            if (file.endsWith('tsdoc-validator.ts') || file.includes('node_modules/')) {
+                // Ignorar el archivo del validador o dependencias externas
+                continue;
+            }
+
+            const fullPath = path.resolve(file);
+            logDebug(`📄 Validando archivo: ${fullPath}`);
+
+            const errors = validateFile(fullPath, changedLines[file]);
+
+            if (errors.length > 0) {
+                errorsByFile[file] = errors;
+                totalErrors += errors.length;
+            } else {
+                logDebug(`✅ Ningún problema encontrado en: ${fullPath}`);
+            }
         }
-    }
 
-    if (!hasErrors) {
-        console.log('✅ Validación completada sin errores.');
-    }
+        logValidationResult(errorsByFile, totalErrors);
 
-    return !hasErrors;
+        return totalErrors === 0;
+    } catch (error) {
+        logDebug(`❌ Error de validación: ${error}`);
+        console.error('\n⚠️ **Error crítico al validar TSDoc.**');
+        return false;
+    }
 }
 
-// Ejecución del validador
+// Punto de entrada principal
 if (require.main === module) {
     process.exit(runValidation() ? 0 : 1);
 }
+
+export { runValidation };
