@@ -546,10 +546,17 @@ function validateFile(
                 const declarationType = determineDeclarationType(lines[declarationIndex]);
                 logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}`);
 
-                // Verificar que la declaración vinculada esté en la línea 43
-                if (declarationIndex !== 42) { // 43-1=42 (índices de array son 0-based)
-                    logDebug(`IGNORANDO: Cambio en comentario no afecta a la declaración en línea 43`);
-                    continue;
+                if (declarationIndex >= 0 && !validatedDeclarations.has(declarationIndex)) {
+                    const declarationType = determineDeclarationType(lines[declarationIndex]);
+                    logDebug(`Cambio en comentario línea ${idx+1} vinculado a declaración en línea ${declarationIndex+1}`);
+
+                    validatedDeclarations.add(declarationIndex);
+
+                    const docErrors = validateDocumentation(lines, declarationIndex, declarationType);
+                    if (docErrors.length > 0) {
+                        errors.push(`Error en línea ${declarationIndex + 1}: ${lines[declarationIndex].trim()}`);
+                        docErrors.forEach(e => errors.push(`  - ${e}`));
+                    }
                 }
 
                 validatedDeclarations.add(declarationIndex);
