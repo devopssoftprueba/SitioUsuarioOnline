@@ -447,6 +447,7 @@ function validateFile(
     changed: Set<number>
 ): string[] {
     const errors: string[] = [];
+    const validatedDeclarations = new Set<string>();
 
     if (!existsSync(filePath)) {
         logDebug(`Archivo eliminado: ${filePath}`);
@@ -485,10 +486,18 @@ function validateFile(
 
     // 3) Procesar cambios en código
     codeChanges.forEach(idx => {
-        // Solo validar la declaración si realmente modificamos la línea de la declaración
+        // Identificar qué declaración afecta este cambio (puede ser la propia línea o una declaración asociada)
         const decl = findDeclarationLine(lines, idx);
-        if (!decl || decl.index !== idx) return; // Solo validar si modificamos exactamente la línea de declaración
 
+        // Si no encontramos una declaración o si la declaración no está en las líneas cambiadas, ignorar
+        if (!decl || !changed.has(decl.index + 1)) return;
+
+        // Verificar si ya validamos esta declaración para evitar duplicados
+        const uniqueId = `${decl.index}_${decl.type}`;
+        if (validatedDeclarations.has(uniqueId)) return;
+        validatedDeclarations.add(uniqueId);
+
+        // Ahora sí validar la documentación
         const docErrors = validateDocumentation(lines, decl.index, decl.type);
         if (docErrors.length > 0) {
             const reportLine = decl.index + 1;
