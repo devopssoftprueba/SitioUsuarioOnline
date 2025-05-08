@@ -485,8 +485,9 @@ function validateFile(
 
     // 3) Procesar cambios en código
     codeChanges.forEach(idx => {
+        // Solo validar la declaración si realmente modificamos la línea de la declaración
         const decl = findDeclarationLine(lines, idx);
-        if (!decl) return;
+        if (!decl || decl.index !== idx) return; // Solo validar si modificamos exactamente la línea de declaración
 
         const docErrors = validateDocumentation(lines, decl.index, decl.type);
         if (docErrors.length > 0) {
@@ -496,6 +497,15 @@ function validateFile(
             errors.push(`Error en línea ${reportLine}: ${reportCode}`);
             docErrors.forEach(e => errors.push(`  - ${e}`));
         }
+    });
+
+    //logs para valdiar errores
+    codeChanges.forEach(idx => {
+        const decl = findDeclarationLine(lines, idx);
+        if (!decl) return;
+
+        logDebug(`Cambio en línea ${idx+1}, afecta a la declaración en línea ${decl.index+1}: ${lines[decl.index].trim()}`);
+
     });
 
     return errors;
