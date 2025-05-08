@@ -31,7 +31,7 @@ class Usuario {
     /**
      * Returns a greeting for the user.
      *
-     * @returns xxxx dfdgd.
+     * @returns  pongo esto en español.
      */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
