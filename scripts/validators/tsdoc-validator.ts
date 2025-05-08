@@ -143,6 +143,7 @@ function getChangedLines(): { lines: ChangedLines; functions: Record<string, Set
         logDebug(`Error al obtener líneas cambiadas: ${error}`);
         return { lines: {}, functions: {} };
     }
+
 }
 
 // 1. Función para determinar el tipo de declaración (mejorada para detectar métodos de clase con tipo de retorno)
@@ -190,6 +191,24 @@ function determineDeclarationType(line: string): keyof typeof rules {
 }
 
 function isInsideComment(lines: string[], lineIndex: number): boolean {
+    // Verifica si la línea actual es un comentario o parte de un bloque de comentarios
+    const currentLine = lines[lineIndex].trim();
+
+    // Si la línea es parte del cuerpo de un comentario
+    if (currentLine.startsWith('*') && !currentLine.startsWith('*/')) {
+        return true;
+    }
+
+    // Si la línea es el inicio de un comentario
+    if (currentLine.startsWith('/**')) {
+        return true;
+    }
+
+    // Si la línea es el final de un comentario
+    if (currentLine.endsWith('*/') || currentLine === '*/') {
+        return true;
+    }
+
     // busca hacia arriba el inicio /** y hacia abajo el cierre */
     let i = lineIndex;
     while (i >= 0 && !lines[i].trim().startsWith('/**')) {
@@ -457,65 +476,63 @@ function validateFile(
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
 
-    // 1) Separar cambios en comentarios vs. cambios en código
-    const commentChanges = new Set<number>();
-    const codeChanges = new Set<number>();
-    for (const num of changed) {
-        const idx = num - 1;
-        if (idx < 0 || idx >= lines.length) continue;
-        if (isInsideComment(lines, idx)) commentChanges.add(idx);
-        else codeChanges.add(idx);
+    // IMPORTANTE: Solo nos importan las líneas que realmente cambiaron
+    const changedLines = Array.from(changed).map(num => num - 1).filter(idx => idx >= 0 && idx < lines.length);
+
+    // Registrar exactamente qué líneas estamos evaluando
+    logDebug(`Evaluando líneas modificadas en ${filePath}: ${changedLines.map(i => i+1).join(', ')}`);
+
+    // Procesar directamente cada línea modificada
+    for (const idx of changedLines) {
+        // Si este cambio modifica una declaración directamente
+        const directDecl = findDeclarationLine(lines, idx);
+        if (directDecl && directDecl.index === idx) {
+            // Es un cambio directo en una declaración
+            const uniqueId = `${directDecl.index}_${directDecl.type}`;
+            if (!validatedDeclarations.has(uniqueId)) {
+                validatedDeclarations.add(uniqueId);
+
+                // Solo validamos si este cambio es en una declaración
+                logDebug(`Validando declaración modificada en línea ${idx+1}: ${lines[idx].trim()}`);
+
+                const docErrors = validateDocumentation(lines, directDecl.index, directDecl.type);
+                if (docErrors.length > 0) {
+                    errors.push(`Error en línea ${directDecl.index + 1}: ${lines[directDecl.index].trim()}`);
+                    docErrors.forEach(e => errors.push(`  - ${e}`));
+                }
+            }
+        }
+        // Si este cambio está dentro de un comentario de documentación
+        else if (isInsideComment(lines, idx)) {
+            // Buscar a qué declaración pertenece este comentario
+            let declLine = -1;
+            for (let i = idx + 1; i < Math.min(idx + 20, lines.length); i++) {
+                const potentialDecl = findDeclarationLine(lines, i);
+                if (potentialDecl) {
+                    declLine = potentialDecl.index;
+                    break;
+                }
+            }
+
+            if (declLine >= 0) {
+                const decl = findDeclarationLine(lines, declLine);
+                if (decl) {
+                    const uniqueId = `${decl.index}_${decl.type}`;
+                    if (!validatedDeclarations.has(uniqueId)) {
+                        validatedDeclarations.add(uniqueId);
+
+                        logDebug(`Validando comentario modificado en línea ${idx+1} para declaración en línea ${declLine+1}`);
+
+                        const docErrors = validateDocumentation(lines, decl.index, decl.type);
+                        if (docErrors.length > 0) {
+                            errors.push(`Error en línea ${decl.index + 1}: ${lines[decl.index].trim()}`);
+                            docErrors.forEach(e => errors.push(`  - ${e}`));
+                        }
+                    }
+                }
+            }
+        }
     }
-
-    // 2) Procesar cambios en documentación
-    commentChanges.forEach(idx => {
-        // Usa el helper para validar el cambio de comentario
-        const docErrors = validateCommentChange(lines, idx);
-        if (docErrors.length > 0) {
-            // Encuentra de nuevo la declaración para reportar la línea correcta
-            const decl = findDeclarationLine(lines, idx + 1);
-            const reportLine = decl ? decl.index + 1 : idx + 1;
-            const reportCode = decl
-                ? lines[decl.index].trim()
-                : lines[idx].trim();
-
-            errors.push(`Error en línea ${reportLine}: ${reportCode}`);
-            docErrors.forEach(e => errors.push(`  - ${e}`));
-        }
-    });
-
-    // 3) Procesar cambios en código
-    codeChanges.forEach(idx => {
-        // Identificar qué declaración afecta este cambio (puede ser la propia línea o una declaración asociada)
-        const decl = findDeclarationLine(lines, idx);
-
-        // Si no encontramos una declaración o si la declaración no está en las líneas cambiadas, ignorar
-        if (!decl || !changed.has(decl.index + 1)) return;
-
-        // Verificar si ya validamos esta declaración para evitar duplicados
-        const uniqueId = `${decl.index}_${decl.type}`;
-        if (validatedDeclarations.has(uniqueId)) return;
-        validatedDeclarations.add(uniqueId);
-
-        // Ahora sí validar la documentación
-        const docErrors = validateDocumentation(lines, decl.index, decl.type);
-        if (docErrors.length > 0) {
-            const reportLine = decl.index + 1;
-            const reportCode = lines[decl.index].trim();
-
-            errors.push(`Error en línea ${reportLine}: ${reportCode}`);
-            docErrors.forEach(e => errors.push(`  - ${e}`));
-        }
-    });
-
-    //logs para valdiar errores
-    codeChanges.forEach(idx => {
-        const decl = findDeclarationLine(lines, idx);
-        if (!decl) return;
-
-        logDebug(`Cambio en línea ${idx+1}, afecta a la declaración en línea ${decl.index+1}: ${lines[decl.index].trim()}`);
-
-    });
 
     return errors;
 }
