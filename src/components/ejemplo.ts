@@ -20,7 +20,7 @@ class Usuario {
     /**
      * Creates an instance of Usuario.
      *
-     * @param nombre - cambio el nombre a español.
+     * @param nombre - the comment in english .
      * @param correo - The user's email address.
      */
     constructor(nombre: string, correo: string) {
