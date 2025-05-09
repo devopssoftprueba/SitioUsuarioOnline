@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * solo aqui.
+     * solo cvbcvbcaqui.
      *
      * @returns  español español.
      */
