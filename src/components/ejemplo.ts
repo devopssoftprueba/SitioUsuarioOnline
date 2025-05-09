@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * esto lo pongo en español para una prueba luego de actualizar, debe fallar pero solo aquí.
+     * cambio aqui para dar error.
      *
      * @returns  español español.
      */
