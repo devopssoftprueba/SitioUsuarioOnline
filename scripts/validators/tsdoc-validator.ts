@@ -121,21 +121,30 @@ type ChangedLines = Record<string, Set<number>>;
 function determineDeclarationType(line: string): keyof typeof rules {
     const trimmed = line.trim();
 
+    // Clases e interfaces
     if (trimmed.startsWith('class ') || trimmed.startsWith('interface ')) {
         return 'class';
-    } else if (
-        trimmed.startsWith('function ') ||
-        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
-        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/)
+    }
+
+    // Funciones y métodos - todos los casos posibles
+    if (
+        trimmed.startsWith('function ') ||                                                         // función normal
+        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||                          // función async
+        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos de clase con modificadores
+        trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z<>[\]]+\s*{/)                       // métodos con tipo de retorno
     ) {
         return 'function';
-    } else if (
+    }
+
+    // Propiedades
+    if (
         trimmed.match(/^(?:public|private|protected)?\s*[a-zA-Z0-9_]+\s*[:=]/) ||
         trimmed.match(/^(?:readonly|static)\s+[a-zA-Z0-9_]+/)
     ) {
         return 'property';
     }
 
+    // Por defecto, asumimos que es una función
     return 'function';
 }
 
