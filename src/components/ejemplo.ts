@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * cambio aqui vbnvbnpara dar error.
+     * solo aqui.
      *
      * @returns  español español.
      */
