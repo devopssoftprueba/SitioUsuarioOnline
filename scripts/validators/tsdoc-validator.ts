@@ -23,16 +23,6 @@ const rules = {
     }
 };
 
-logDebug('Usando validación inteligente de etiquetas basada en el código');
-
-// Define un tipo ChangedLines que es un objeto con claves string y valores Set<number> para almacenar líneas modificadas por archivo
-type ChangedLines = Record<string, Set<number>>;
-
-/**
- * Registra mensajes de depuración con marca de tiempo
- *
- * @param message - El mensaje a mostrar en el log
- */
 function logDebug(message: string): void {
     console.log(`[${new Date().toISOString()}] ${message}`); //Escribe en la consola el mensaje de error
 }
@@ -40,11 +30,9 @@ function logDebug(message: string): void {
 // Imprime un mensaje indicando que el validador TSDoc está en ejecución
 logDebug('🔍 Validador TSDoc en ejecución...');
 
-/**
- * Obtiene las líneas modificadas de los archivos en el push actual.
- *
- * @returns Un objeto con los archivos y sus líneas modificadas.
- */
+
+logDebug('Usando validación inteligente de etiquetas basada en el código');
+
 function getChangedLines(): ChangedLines { // Función que obtiene las líneas modificadas comparando la rama actual con su origen o base.
     try {
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim(); // Obtiene el nombre de la rama actual activa en Git como una cadena de texto sin espacios.
@@ -120,6 +108,22 @@ function getChangedLines(): ChangedLines { // Función que obtiene las líneas m
     }
 }
 
+
+// Define un tipo ChangedLines que es un objeto con claves string y valores Set<number> para almacenar líneas modificadas por archivo
+type ChangedLines = Record<string, Set<number>>;
+
+/**
+ * Registra mensajes de depuración con marca de tiempo
+ *
+ * @param message - El mensaje a mostrar en el log
+ */
+
+/**
+ * Obtiene las líneas modificadas de los archivos en el push actual.
+ *
+ * @returns Un objeto con los archivos y sus líneas modificadas.
+ */
+
 /**
  * Determina el tipo de declaración basado en la línea de código.
  *
@@ -175,13 +179,10 @@ function findDeclarationLine(
             trimmed.startsWith('protected ') ||
             /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed)
         ) {
-            // Solo validar si la línea modificada está directamente relacionada con la declaración
-            if (i === startIndex || lines[startIndex].trim().startsWith('export')) {
-                return {
-                    index: i,
-                    type: determineDeclarationType(trimmed),
-                };
-            }
+            return {
+                index: i,
+                type: determineDeclarationType(trimmed),
+            };
         }
     }
 
@@ -196,12 +197,10 @@ function findDeclarationLine(
  */
 function validateEnglishDocumentation(commentBlock: string): string[] {
     const spanishWords = [
-        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
-        'para', 'por', 'con', 'sin', 'porque', 'como', 'según', 'cuando',
-        'si', 'pero', 'aunque', 'mientras', 'hasta', 'desde', 'entre',
-        'función', 'archivo', 'línea', 'código', 'método', 'clase',
-        'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna',
-        'pongo', 'esto', 'aquí', 'ese', 'esa', 'eso', 'español', 'área', 'círculo', 'fórmula'
+        'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'para', 'por', 'con', 'sin',
+        'porque', 'como', 'según', 'cuando', 'si', 'pero', 'aunque', 'mientras', 'hasta',
+        'desde', 'entre', 'función', 'archivo', 'línea', 'código', 'método', 'clase',
+        'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna', 'esto', 'español'
     ];
 
     const cleanedComment = commentBlock
@@ -215,7 +214,7 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
         return regex.test(cleanedComment);
     });
 
-    if (foundSpanishWords.length > 2) { // Ajusta el umbral para permitir hasta 2 palabras españolas
+    if (foundSpanishWords.length > 0) {
         return [`Error: La documentación contiene palabras en español: ${foundSpanishWords.join(', ')}.`];
     }
 
@@ -278,62 +277,34 @@ function isPropertyUsed(lines: string[], propertyName: string): boolean {
  * @returns Lista de errores encontrados.
  */
 function validateFile(filePath: string, changed: Set<number>): string[] {
-    const errors: string[] = []; // Arreglo donde se almacenan errores de documentación encontrados
+    const errors: string[] = [];
 
-    try {
-        // Si el archivo ya no existe (por ejemplo, fue eliminado en este commit)
-        if (!existsSync(filePath)) {
-            logDebug(`Archivo eliminado: ${filePath}`); // Se muestra en los logs para informar
-            return [`Archivo eliminado (informativo): ${filePath}`]; // Solo se devuelve un mensaje informativo
-        }
-
-        // Lee el contenido del archivo como texto
-        const fileContent = readFileSync(filePath, 'utf8');
-        const lines = fileContent.split('\n'); // Se divide en líneas para procesarlo línea por línea
-
-        const declarations: Array<{ index: number; type: keyof typeof rules }> = []; // Almacena declaraciones encontradas
-
-        // Recorre todas las líneas que fueron modificadas según el diff
-        changed.forEach(lineNumber => {
-            const lineIndex = lineNumber - 1; // Ajuste de índice (los diffs comienzan desde 1)
-            if (lineIndex < 0 || lineIndex >= lines.length) return; // Se ignoran líneas inválidas
-
-            logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);
-
-            // Busca si en esta línea o hacia atrás hay una declaración (función, clase, etc.)
-            const declaration = findDeclarationLine(lines, lineIndex);
-            if (!declaration) {
-                logDebug(`No se encontró declaración para la línea ${lineNumber}`);
-                return; // Si no hay nada que validar, continúa con la siguiente línea
-            }
-
-            // Evita registrar dos veces la misma declaración
-            const alreadyIncluded = declarations.some(d => d.index === declaration.index);
-            if (!alreadyIncluded) {
-                declarations.push(declaration); // Se registra la declaración para validarla después
-                logDebug(`Declaración encontrada en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
-            }
-        });
-
-        // Valida la documentación de cada declaración detectada
-        declarations.forEach(({ index: declarationIndex, type }) => {
-            logDebug(`Validando ${type} en línea ${declarationIndex + 1} en ${filePath}`);
-
-            const validationErrors = validateDocumentation(lines, declarationIndex, type); // Llama al validador real
-            if (validationErrors.length > 0) {
-                const codeLine = lines[declarationIndex].trim(); // Muestra la línea con problema
-                errors.push(`Error en línea ${declarationIndex + 1}: ${codeLine}`); // Mensaje con el código
-                errors.push(...validationErrors.map(e => `  - ${e}`)); // Agrega los detalles del error
-            }
-        });
-
-        return errors; // Devuelve todos los errores encontrados (si los hay)
-
-    } catch (error) {
-        // Si ocurre un error inesperado al procesar el archivo
-        logDebug(`Error al validar archivo ${filePath}: ${error}`);
-        return [`Error al validar archivo ${filePath}: ${error}`];
+    if (!existsSync(filePath)) {
+        logDebug(`Archivo eliminado: ${filePath}`);
+        return [`Archivo eliminado (informativo): ${filePath}`];
     }
+
+    const fileContent = readFileSync(filePath, 'utf8');
+    const lines = fileContent.split('\n');
+
+    changed.forEach(lineNumber => {
+        const lineIndex = lineNumber - 1; // Ajuste de índice
+        if (lineIndex < 0 || lineIndex >= lines.length) return;
+
+        const declaration = findDeclarationLine(lines, lineIndex);
+        if (declaration) {
+            const validationErrors = validateDocumentation(
+                lines,
+                declaration.index,
+                declaration.type
+            );
+            if (validationErrors.length > 0) {
+                errors.push(...validationErrors);
+            }
+        }
+    });
+
+    return errors;
 }
 
 /**
