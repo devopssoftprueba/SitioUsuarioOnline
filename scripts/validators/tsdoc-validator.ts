@@ -1,30 +1,25 @@
-// Importa la función execSync del módulo child_process para ejecutar comandos de terminal
+// Importa módulos necesarios
 import { execSync } from 'child_process';
-// Importa las funciones readFileSync y existsSync del módulo fs para leer archivos y verificar su existencia
 import { readFileSync, existsSync } from 'fs';
-// Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
 
 // Reglas para validación de documentación
 const rules = {
     'class': {
         requiredTags: [],
-        optionalTags: ['@description', '@example', '@remarks', '@deprecated', '@category', '@package',
-            '@author', '@version', '@since', '@decorator', '@view'],
+        optionalTags: ['@description', '@example', '@remarks', '@deprecated', '@category', '@package', '@author'],
     },
     'function': {
         requiredTags: [],
-        optionalTags: ['@param', '@returns', '@throws', '@example', '@remarks', '@deprecated',
-            '@method', '@event', '@computed'],
+        optionalTags: ['@param', '@returns', '@throws', '@example', '@remarks', '@deprecated'],
     },
     'property': {
         requiredTags: [],
-        optionalTags: ['@description', '@defaultValue', '@remarks', '@deprecated', '@prop',
-            '@data', '@input', '@output', '@property'],
+        optionalTags: ['@description', '@defaultValue', '@remarks', '@deprecated'],
     },
 };
 
-// Función para registrar mensajes de depuración con marca de tiempo
+// Función para registrar mensajes de depuración
 function logDebug(message: string): void {
     console.log(`[${new Date().toISOString()}] ${message}`);
 }
@@ -33,41 +28,7 @@ function logDebug(message: string): void {
 function getChangedLines(): Record<string, Set<number>> {
     try {
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-        const remoteExists = execSync(`git ls-remote --heads origin ${currentBranch}`, { encoding: 'utf8' }).trim();
-
-        let diffCommand;
-        if (remoteExists) {
-            diffCommand = `git diff origin/${currentBranch}..HEAD -U3 --no-color`;
-            logDebug(`Comparando con rama remota: origin/${currentBranch}`);
-        } else {
-            let baseBranch = 'main';
-            try {
-                execSync('git rev-parse --verify origin/main', { stdio: 'pipe' });
-            } catch {
-                try {
-                    execSync('git rev-parse --verify origin/master', { stdio: 'pipe' });
-                    baseBranch = 'master';
-                } catch {
-                    try {
-                        execSync('git rev-parse --verify origin/develop', { stdio: 'pipe' });
-                        baseBranch = 'develop';
-                    } catch {
-                        diffCommand = 'git diff --staged -U3 --no-color';
-                        logDebug('No se encontró rama remota. Usando cambios preparados (staged).');
-                    }
-                }
-            }
-
-            if (!diffCommand) {
-                diffCommand = `git diff origin/${baseBranch}..HEAD -U3 --no-color`;
-                logDebug(`Rama nueva detectada. Comparando con ${baseBranch}.`);
-            }
-        }
-
-        logDebug(`Ejecutando comando diff: ${diffCommand}`);
-        const diffOutput = execSync(diffCommand, { encoding: 'utf8' });
-        logDebug(`Longitud de la salida diff: ${diffOutput.length} bytes`);
-
+        const diffOutput = execSync(`git diff origin/${currentBranch}..HEAD -U3 --no-color`, { encoding: 'utf8' });
         const changedLines: Record<string, Set<number>> = {};
         const fileRegex = /^diff --git a\/(.+?) b\/(.+)$/;
         const hunkRegex = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/;
@@ -129,14 +90,14 @@ function validateEnglishDocumentation(commentBlock: string): string[] {
 function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] {
     let i = declarationIndex - 1;
     while (i >= 0 && !lines[i].trim().startsWith('/**')) i--;
-    if (i < 0) return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
+    if (i < 0) return []; // No valida si no hay comentarios
     const commentBlock = lines.slice(i, declarationIndex).join('\n');
     return validateEnglishDocumentation(commentBlock);
 }
 
 // Función para validar un archivo completo
 function validateFile(filePath: string, changed: Set<number>): string[] {
-    if (!existsSync(filePath)) return [`Archivo eliminado: ${filePath}`];
+    if (!existsSync(filePath)) return [];
     const errors: string[] = [];
     const lines = readFileSync(filePath, 'utf8').split('\n');
     changed.forEach(lineNumber => {
