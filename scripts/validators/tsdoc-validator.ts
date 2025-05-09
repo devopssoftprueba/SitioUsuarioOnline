@@ -251,15 +251,21 @@ function validateDocumentation(
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
     }
 
-    const commentBlock = lines.slice(i, declarationIndex).join('\n');
-    const errors: string[] = validateEnglishDocumentation(commentBlock);
-
-    if (type === 'property') {
-        const propertyName = lines[declarationIndex].split(':')[0].trim();
-        if (!isPropertyUsed(lines, propertyName)) {
-            return []; // Ignorar propiedades no usadas
-        }
+    const startCommentIndex = i;
+    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
+        i--;
     }
+
+    if (i < 0) {
+        return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de ${type}.`];
+    }
+
+    const commentBlock = lines.slice(i, startCommentIndex + 1).join('\n');
+    const errors: string[] = [];
+
+    // Validar idioma de la documentación
+    const languageErrors = validateEnglishDocumentation(commentBlock);
+    errors.push(...languageErrors);
 
     return errors;
 }
