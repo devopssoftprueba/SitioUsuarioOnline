@@ -165,21 +165,22 @@ function findDeclarationLine(
     for (let i = startIndex; i >= 0; i--) {
         const trimmed = lines[i].trim();
 
+        // Ignorar comentarios y líneas vacías
         if (trimmed.startsWith('/**') || trimmed.startsWith('*') || trimmed === '*/' || trimmed === '') {
-            continue; // Ignorar comentarios y líneas vacías
+            continue;
         }
 
+        // Detectar declaraciones
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
             trimmed.startsWith('function ') ||
-            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) ||
+            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) || // Funciones
             trimmed.startsWith('public ') ||
             trimmed.startsWith('private ') ||
             trimmed.startsWith('protected ') ||
-            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed)
+            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed) // Propiedades
         ) {
-            logDebug(`Declaración encontrada en línea ${i + 1}: ${trimmed}`);
             return {
                 index: i,
                 type: determineDeclarationType(trimmed),
@@ -187,7 +188,7 @@ function findDeclarationLine(
         }
     }
 
-    logDebug(`No se encontró una declaración válida para la línea ${startIndex + 1}`);
+    // Si no se encuentra una declaración válida
     return null;
 }
 
@@ -299,6 +300,8 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
 
         const declaration = findDeclarationLine(lines, lineIndex);
         if (declaration) {
+            logDebug(`Validando declaración en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
+
             const validationErrors = validateDocumentation(
                 lines,
                 declaration.index,
@@ -307,6 +310,8 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
             if (validationErrors.length > 0) {
                 errors.push(...validationErrors);
             }
+        } else {
+            logDebug(`No se encontró declaración para la línea ${lineNumber}`);
         }
     });
 
