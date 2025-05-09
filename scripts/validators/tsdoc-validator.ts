@@ -170,7 +170,7 @@ function findDeclarationLine(
             continue;
         }
 
-        // Detectar declaraciones
+        // Detectar declaraciones (clases, funciones, propiedades)
         if (
             trimmed.startsWith('class ') ||
             trimmed.startsWith('interface ') ||
@@ -181,6 +181,7 @@ function findDeclarationLine(
             trimmed.startsWith('protected ') ||
             /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed) // Propiedades
         ) {
+            logDebug(`Declaración encontrada en línea ${i + 1}: ${trimmed}`);
             return {
                 index: i,
                 type: determineDeclarationType(trimmed),
@@ -189,6 +190,7 @@ function findDeclarationLine(
     }
 
     // Si no se encuentra una declaración válida
+    logDebug(`No se encontró una declaración válida para la línea ${startIndex + 1}`);
     return null;
 }
 
