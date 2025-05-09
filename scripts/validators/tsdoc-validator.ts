@@ -117,20 +117,29 @@ type ChangedLines = Record<string, Set<number>>;
  * @param line - Línea de código a analizar
  * @returns El tipo de declaración identificado
  */
-function determineDeclarationType(line: string): keyof typeof rules {
+function determineDeclarationType(line: string): keyof typeof rules | null {
     const trimmed = line.trim();
+
+    // Ignorar comentarios y líneas vacías
+    if (trimmed === '' ||
+        trimmed.startsWith('/*') ||
+        trimmed.startsWith('*') ||
+        trimmed.startsWith('*/') ||
+        trimmed.startsWith('//')) {
+        return null;
+    }
 
     // Clases e interfaces
     if (trimmed.startsWith('class ') || trimmed.startsWith('interface ')) {
         return 'class';
     }
 
-    // Funciones y métodos - todos los casos posibles
+    // Funciones y métodos
     if (
-        trimmed.startsWith('function ') ||                                                         // función normal
-        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||                          // función async
-        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) || // métodos de clase con modificadores
-        trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z<>[\]]+\s*{/)                       // métodos con tipo de retorno
+        trimmed.startsWith('function ') ||
+        trimmed.match(/^(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+        trimmed.match(/^(?:public|private|protected)\s+(?:async\s+)?[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
+        trimmed.match(/^[a-zA-Z0-9_]+\s*\(.*\)\s*:\s*[a-zA-Z<>[\]]+\s*{/)
     ) {
         return 'function';
     }
@@ -143,8 +152,7 @@ function determineDeclarationType(line: string): keyof typeof rules {
         return 'property';
     }
 
-    // Por defecto, asumimos que es una función
-    return 'function';
+    return null; // Cambiado de 'function' a null
 }
 
 /**
@@ -195,69 +203,37 @@ function findDeclarationLine(
 ): { index: number; type: keyof typeof rules } | null {
     let i = startIndex;
 
-    // Primero analizamos el contexto para saber el nivel de anidamiento
-    const nestingLevel = analyzeContext(lines, startIndex);
-
     while (i >= 0) {
         const currentLine = lines[i].trim();
-
-        // Si encontramos una declaración válida
         const type = determineDeclarationType(currentLine);
 
-        if (type) {
-            // Verificar si hay un bloque de comentarios TSDoc justo antes
+        // Solo procesar si se encontró un tipo válido
+        if (type !== null) {
+            // Verificar si tiene documentación TSDoc
             let j = i - 1;
-            let foundTSDoc = false;
-
-            // Retroceder saltando líneas en blanco
             while (j >= 0 && lines[j].trim() === '') {
                 j--;
             }
 
-            // Buscar el cierre del comentario
             if (j >= 0 && lines[j].trim() === '*/') {
-                foundTSDoc = true;
-                // Si encontramos el cierre, buscamos la apertura
-                while (j >= 0 && !lines[j].trim().startsWith('/**')) {
-                    j--;
-                }
-                // Si encontramos la apertura, esta es la verdadera línea de declaración
-                if (j >= 0 && lines[j].trim().startsWith('/**')) {
-                    return {
-                        index: i,
-                        type: type
-                    };
-                }
-            }
-
-            // Si no hay TSDoc y no es una clase anidada
-            if (!foundTSDoc && (nestingLevel === 0 || type !== 'class')) {
+                // Encontramos una declaración válida con documentación
+                return {
+                    index: i,
+                    type: type
+                };
+            } else if (type === 'function' || type === 'property') {
+                // Solo reportar si no tiene documentación y no es un comentario
                 return {
                     index: i,
                     type: type
                 };
             }
         }
-
-        // Si encontramos una llave de cierre, saltamos el bloque
-        if (currentLine === '}') {
-            let bracketCount = 1;
-            i--;
-            while (i >= 0 && bracketCount > 0) {
-                const line = lines[i].trim();
-                if (line === '}') bracketCount++;
-                if (line === '{') bracketCount--;
-                i--;
-            }
-            continue;
-        }
-
         i--;
     }
 
     return null;
 }
-
 /**
  * Verifica si la documentación está en inglés.
  *
