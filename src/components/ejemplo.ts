@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * Returns a greeting message for the user.
+     *
      *
      * @returns A personalized greeting string.
      */
