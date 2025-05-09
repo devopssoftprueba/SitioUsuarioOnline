@@ -179,6 +179,7 @@ function findDeclarationLine(
             trimmed.startsWith('protected ') ||
             /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed)
         ) {
+            logDebug(`Declaración encontrada en línea ${i + 1}: ${trimmed}`);
             return {
                 index: i,
                 type: determineDeclarationType(trimmed),
@@ -186,6 +187,7 @@ function findDeclarationLine(
         }
     }
 
+    logDebug(`No se encontró una declaración válida para la línea ${startIndex + 1}`);
     return null;
 }
 
@@ -261,18 +263,14 @@ function validateDocumentation(
     }
 
     const commentBlock = lines.slice(i, startCommentIndex + 1).join('\n');
-    const errors: string[] = [];
+    logDebug(`Bloque de comentarios encontrado:\n${commentBlock}`);
 
-    // Validar idioma de la documentación
-    const languageErrors = validateEnglishDocumentation(commentBlock);
-    errors.push(...languageErrors);
+    const errors: string[] = validateEnglishDocumentation(commentBlock);
+    if (errors.length > 0) {
+        logDebug(`Errores detectados en el bloque de comentarios: ${errors.join(', ')}`);
+    }
 
     return errors;
-}
-
-function isPropertyUsed(lines: string[], propertyName: string): boolean {
-    const propertyUsageRegex = new RegExp(`\\b${propertyName}\\b`);
-    return lines.some(line => propertyUsageRegex.test(line));
 }
 
 /**
@@ -297,6 +295,8 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
         const lineIndex = lineNumber - 1; // Ajuste de índice
         if (lineIndex < 0 || lineIndex >= lines.length) return;
 
+        logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);
+
         const declaration = findDeclarationLine(lines, lineIndex);
         if (declaration) {
             const validationErrors = validateDocumentation(
@@ -312,7 +312,6 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
 
     return errors;
 }
-
 /**
  * Ejecuta la validación en todos los archivos con cambios.
  *
