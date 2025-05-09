@@ -205,30 +205,39 @@ function findDeclarationLine(
 
     while (i >= 0) {
         const currentLine = lines[i].trim();
-        const type = determineDeclarationType(currentLine);
 
-        // Solo procesar si se encontró un tipo válido
-        if (type !== null) {
-            // Verificar si tiene documentación TSDoc
-            let j = i - 1;
-            while (j >= 0 && lines[j].trim() === '') {
-                j--;
-            }
-
-            if (j >= 0 && lines[j].trim() === '*/') {
-                // Encontramos una declaración válida con documentación
-                return {
-                    index: i,
-                    type: type
-                };
-            } else if (type === 'function' || type === 'property') {
-                // Solo reportar si no tiene documentación y no es un comentario
-                return {
-                    index: i,
-                    type: type
-                };
-            }
+        // Si es una línea de comentario o vacía, continuar
+        if (currentLine === '' ||
+            currentLine.startsWith('/*') ||
+            currentLine.startsWith('*') ||
+            currentLine.startsWith('*/') ||
+            currentLine.startsWith('//')) {
+            i--;
+            continue;
         }
+
+        // Obtener el tipo de declaración
+        const type = determineDeclarationType(currentLine);
+        if (type !== null) {
+            return {
+                index: i,
+                type: type
+            };
+        }
+
+        // Si encontramos una llave de cierre, saltar el bloque
+        if (currentLine === '}') {
+            let bracketCount = 1;
+            i--;
+            while (i >= 0 && bracketCount > 0) {
+                const line = lines[i].trim();
+                if (line === '}') bracketCount++;
+                if (line === '{') bracketCount--;
+                i--;
+            }
+            continue;
+        }
+
         i--;
     }
 
@@ -323,44 +332,47 @@ function validateFile(filePath: string, changed: Set<number>): string[] {
     const fileContent = readFileSync(filePath, 'utf8');
     const lines = fileContent.split('\n');
 
-    // Convertimos el Set a un array y ordenamos las líneas para procesarlas en orden
+    // Ordenar las líneas cambiadas
     const changedLinesArray = Array.from(changed).sort((a, b) => a - b);
 
-    // Usamos un Set para llevar registro de las declaraciones ya validadas
-    const validatedDeclarations = new Set<number>();
+    // Crear un mapa para rastrear las declaraciones ya procesadas
+    const processedDeclarations = new Map<number, boolean>();
 
     for (const lineNumber of changedLinesArray) {
-        const lineIndex = lineNumber - 1; // Ajuste de índice
+        const lineIndex = lineNumber - 1;
         if (lineIndex < 0 || lineIndex >= lines.length) continue;
 
-        logDebug(`Verificando línea cambiada ${lineNumber}: ${lines[lineIndex].trim()}`);
+        const line = lines[lineIndex].trim();
+        logDebug(`Verificando línea cambiada ${lineNumber}: ${line}`);
+
+        // Ignorar líneas de comentarios y vacías
+        if (line.startsWith('/*') || line.startsWith('*') || line === '' || line.startsWith('//')) {
+            continue;
+        }
 
         const declaration = findDeclarationLine(lines, lineIndex);
         if (declaration) {
-            // Si ya validamos esta declaración, continuamos
-            if (validatedDeclarations.has(declaration.index)) {
-                logDebug(`Declaración en línea ${declaration.index + 1} ya validada, saltando.`);
-                continue;
-            }
+            // Si la declaración no ha sido procesada aún
+            if (!processedDeclarations.has(declaration.index)) {
+                logDebug(`Validando declaración en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
 
-            logDebug(`Validando declaración en línea ${declaration.index + 1}: ${lines[declaration.index].trim()}`);
-            validatedDeclarations.add(declaration.index);
-
-            const validationErrors = validateDocumentation(
-                lines,
-                declaration.index,
-                declaration.type
-            );
-
-            if (validationErrors.length > 0) {
-                // Agregamos el número de línea a los errores
-                const errorsWithLineNumber = validationErrors.map(
-                    err => `${err} (línea ${declaration.index + 1})`
+                const validationErrors = validateDocumentation(
+                    lines,
+                    declaration.index,
+                    declaration.type
                 );
-                errors.push(...errorsWithLineNumber);
+
+                if (validationErrors.length > 0) {
+                    errors.push(...validationErrors.map(
+                        err => `${err} (línea ${declaration.index + 1})`
+                    ));
+                }
+
+                // Marcar esta declaración como procesada
+                processedDeclarations.set(declaration.index, true);
+            } else {
+                logDebug(`Declaración en línea ${declaration.index + 1} ya validada, saltando.`);
             }
-        } else {
-            logDebug(`No se encontró declaración para la línea ${lineNumber}`);
         }
     }
 
