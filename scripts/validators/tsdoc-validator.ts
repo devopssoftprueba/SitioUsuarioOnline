@@ -33,7 +33,6 @@ logDebug('🔍 Validador TSDoc en ejecución...');
 logDebug('Usando validación inteligente de etiquetas basada en el código');
 
 function getChangedLines(): ChangedLines { // Función que obtiene las líneas modificadas comparando la rama actual con su origen o base.
-    const diffCommand = 'git diff HEAD --staged -U3 --no-color';
 
     try {
         const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim(); // Obtiene el nombre de la rama actual activa en Git como una cadena de texto sin espacios.
@@ -194,46 +193,45 @@ function findDeclarationLine(
     lines: string[],
     startIndex: number
 ): { index: number; type: keyof typeof rules } | null {
-    // Primero buscamos la declaración más cercana (función o metodo)
     let i = startIndex;
+
+    // Primero analizamos el contexto para saber el nivel de anidamiento
+    const nestingLevel = analyzeContext(lines, startIndex);
+
     while (i >= 0) {
-        const trimmedLine = lines[i].trim();
+        const currentLine = lines[i].trim();
 
-        // Si encontramos una declaración de función o metodo primero, la retornamos
-        if (
-            trimmedLine.match(/^(?:public|private|protected)?(?:\s+static)?(?:\s+async)?\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/) ||
-            trimmedLine.match(/^function\s+[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/)
-        ) {
+        // Ignorar líneas vacías y comentarios
+        if (currentLine === '' || currentLine.startsWith('//') ||
+            currentLine.startsWith('*') || currentLine.startsWith('/*')) {
+            i--;
+            continue;
+        }
+
+        // Si encontramos una declaración válida
+        const type = determineDeclarationType(currentLine);
+
+        // Si estamos dentro de una clase (nestingLevel > 0), priorizamos funciones y propiedades
+        if (nestingLevel > 0 && type === 'class') {
+            i--;
+            continue;
+        }
+
+        if (type) {
             return {
                 index: i,
-                type: 'function'
+                type: type
             };
         }
 
-        // Si encontramos una propiedad
-        if (trimmedLine.match(/^(?:public|private|protected)?(?:\s+readonly)?\s+[a-zA-Z0-9_]+\s*[:=]/)) {
-            return {
-                index: i,
-                type: 'property'
-            };
-        }
-
-        // Solo si no encontramos una función o propiedad antes, consideramos la clase
-        if (trimmedLine.startsWith('class ') || trimmedLine.startsWith('interface ')) {
-            return {
-                index: i,
-                type: 'class'
-            };
-        }
-
-        // Si encontramos una llave de cierre, necesitamos saltar el bloque
-        if (trimmedLine === '}') {
+        // Si encontramos una llave de cierre, saltamos el bloque
+        if (currentLine === '}') {
             let bracketCount = 1;
             i--;
             while (i >= 0 && bracketCount > 0) {
-                const currentLine = lines[i].trim();
-                if (currentLine === '}') bracketCount++;
-                if (currentLine === '{') bracketCount--;
+                const line = lines[i].trim();
+                if (line === '}') bracketCount++;
+                if (line === '{') bracketCount--;
                 i--;
             }
             continue;
