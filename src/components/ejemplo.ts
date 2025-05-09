@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * cambio nuevamente esta linea.
+     * ca esta linea.
      *
      * @returns  español español.
      */
