@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * debe detectar cambio aquí y saltar error.
+     * cambio nuevamente esta linea.
      *
      * @returns  español español.
      */
