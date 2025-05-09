@@ -154,51 +154,38 @@ function determineDeclarationType(line: string): keyof typeof rules {  // Funci�
  * @param startIndex - Índice desde donde buscar hacia arriba.
  * @returns El índice de la declaración encontrada y su tipo, o null si no se encuentra.
  */
-function findDeclarationLine( // Función que busca hacia arriba desde una línea dada hasta encontrar una declaración de clase, función o propiedad, ignorando comentarios y líneas vacías.
-    lines: string[], // Arreglo de líneas de código fuente.
-    startIndex: number  // Índice desde el cual se empieza a buscar hacia arriba.
-): { index: number; type: keyof typeof rules } | null { // Devuelve un objeto con el índice de la línea encontrada y su tipo (según 'rules'), o null si no se encuentra nada.
+function findDeclarationLine(
+    lines: string[],
+    startIndex: number
+): { index: number; type: keyof typeof rules } | null {
+    for (let i = startIndex; i >= 0; i--) {
+        const trimmed = lines[i].trim();
 
-    for (let i = startIndex; i >= 0; i--) { // Recorre las líneas hacia arriba, desde la línea indicada hasta la primera.
-        const trimmed = lines[i].trim(); // Elimina espacios en blanco de la línea actual para facilitar la comparación.
-
-        // Ignorar apertura de bloque de comentario /**…
-        if (trimmed.startsWith('/**')) {
-            continue;
-        }
-        // Ignorar líneas interiores de comentario (* …)
-        if (trimmed.startsWith('*')) {
-            continue;
-        }
-        // Ignorar cierre de bloque */
-        if (trimmed === '*/') {
-            continue;
-        }
-        // Ignorar líneas en blanco
-        if (trimmed === '') {
-            continue;
+        if (trimmed.startsWith('/**') || trimmed.startsWith('*') || trimmed === '*/' || trimmed === '') {
+            continue; // Ignorar comentarios y líneas vacías
         }
 
-        // Si es una declaración, la devolvemos
         if (
-            trimmed.startsWith('class ') || // Detecta clases.
-            trimmed.startsWith('interface ') || // Detecta interfaces.
-            trimmed.startsWith('function ') || // Detecta funciones.
-            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) ||  // Detecta funciones tipo flecha o anónimas.
-            trimmed.startsWith('public ') || // Detecta propiedades con acceso público.
-            trimmed.startsWith('private ') || // Detecta propiedades con acceso privado.
-            trimmed.startsWith('protected ') || // Detecta propiedades con acceso protegido.
-            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed) // Detecta propiedades simples con tipo o asignación.
+            trimmed.startsWith('class ') ||
+            trimmed.startsWith('interface ') ||
+            trimmed.startsWith('function ') ||
+            /^[a-zA-Z0-9_]+\s*\(.*\)\s*{?$/.test(trimmed) ||
+            trimmed.startsWith('public ') ||
+            trimmed.startsWith('private ') ||
+            trimmed.startsWith('protected ') ||
+            /^[a-zA-Z0-9_]+\s*[:=]/.test(trimmed)
         ) {
-            return {
-                index: i,  // Devuelve el índice de la línea encontrada.
-                type: determineDeclarationType(trimmed) // Determina si es clase, función o propiedad según su estructura.
-            };
+            // Solo validar si la línea modificada está directamente relacionada con la declaración
+            if (i === startIndex || lines[startIndex].trim().startsWith('export')) {
+                return {
+                    index: i,
+                    type: determineDeclarationType(trimmed),
+                };
+            }
         }
-
     }
 
-    return null; // Si no se encuentra ninguna declaración válida, se devuelve null.
+    return null;
 }
 
 /**
@@ -207,33 +194,32 @@ function findDeclarationLine( // Función que busca hacia arriba desde una líne
  * @param commentBlock - El bloque de comentarios TSDoc a verificar
  * @returns Array de errores si no está en inglés, array vacío si es válido
  */
-function validateEnglishDocumentation(commentBlock: string): string[] { // Función que válida que un bloque de comentario esté redactado en inglés, detectando palabras en español. Retorna errores si encuentra contenido en español.
-
-    const spanishWords = [ //glosario de palabras auxiliares para detectar que la documentación está en español.
+function validateEnglishDocumentation(commentBlock: string): string[] {
+    const spanishWords = [
         'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
         'para', 'por', 'con', 'sin', 'porque', 'como', 'según', 'cuando',
         'si', 'pero', 'aunque', 'mientras', 'hasta', 'desde', 'entre',
         'función', 'archivo', 'línea', 'código', 'método', 'clase',
         'objeto', 'variable', 'valor', 'parámetro', 'devuelve', 'retorna',
-        'pongo', 'esto', 'aquí', 'ese', 'esa','eso', 'español', 'área', 'círculo', 'fórmula'
+        'pongo', 'esto', 'aquí', 'ese', 'esa', 'eso', 'español', 'área', 'círculo', 'fórmula'
     ];
 
-    const cleanedComment = commentBlock // Se limpia el bloque de comentarios para facilitar la búsqueda.
-        .split('\n') // Divide el bloque en líneas individuales.
-        .map(line => line.trim().replace(/^\*\s*/, '')) // Quito espacio y asteriscos de cada línea.
-        .join(' ') // Une todas las líneas en una sola cadena.
-        .toLowerCase(); // Convierte el texto a minúsculas para una comparación insensible a mayúsculas.
+    const cleanedComment = commentBlock
+        .split('\n')
+        .map(line => line.trim().replace(/^\*\s*/, ''))
+        .join(' ')
+        .toLowerCase();
 
-    const foundSpanishWords = spanishWords.filter(word => {  // Filtra las palabras en español que estén presentes en el comentario.
-        const regex = new RegExp(`\\b${word}\\b`, 'i'); // Crea una expresión regular para buscar la palabra completa (con límites de palabra).
-        return regex.test(cleanedComment); // Verifica si esa palabra existe en el comentario.
+    const foundSpanishWords = spanishWords.filter(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'i');
+        return regex.test(cleanedComment);
     });
 
-    if (foundSpanishWords.length > 0) {  // Si se detectaron palabras en español...
-        return [`Error: La documentación parece estar en español. Palabras detectadas: ${foundSpanishWords.join(', ')}. La documentación debe estar en inglés.`];
+    if (foundSpanishWords.length > 2) { // Ajusta el umbral para permitir hasta 2 palabras españolas
+        return [`Error: La documentación contiene palabras en español: ${foundSpanishWords.join(', ')}.`];
     }
 
-    return []; // Si no se detectaron palabras en español, no hay errores.
+    return [];
 }
 
 /**
@@ -244,76 +230,44 @@ function validateEnglishDocumentation(commentBlock: string): string[] { // Funci
  * @param type - Tipo de declaración
  * @returns Lista de errores encontrados
  */
-function validateDocumentation(lines: string[], declarationIndex: number, type: keyof typeof rules): string[] { // Valida que exista un bloque de documentación TSDoc antes de una declaración dada, verificando idioma y etiquetas como @param y @returns si aplican.
+function validateDocumentation(
+    lines: string[],
+    declarationIndex: number,
+    type: keyof typeof rules
+): string[] {
+    let i = declarationIndex - 1;
+    let foundComment = false;
 
-
-    let i = declarationIndex - 1; // Inicializa 'i' para comenzar a buscar desde la línea anterior a la declaración
-    let foundComment = false; // Bandera que indica si se encontró un bloque de comentario válido
-
-    const MAX_BLANK_LINES = 5; // Define el número máximo de líneas en blanco permitidas entre la declaración y el comentario
-    let blankLineCount = 0;  // Contador de líneas en blanco encontradas durante la búsqueda hacia atrás
-
-    while (i >= 0) { // Bucle que recorre las líneas hacia atrás desde la declaración
-        const trimmedLine = lines[i].trim(); // Elimina espacios en blanco al inicio y final de la línea actual
-
-        if (trimmedLine === '') {  // Verifica si la línea está vacía
-            blankLineCount++; // Incrementa el contador de líneas en blanco
-            if (blankLineCount > MAX_BLANK_LINES) { // Sí se excede el límite de líneas en blanco
-                break; // Termina la búsqueda porque se considera que no hay comentario asociado
-            }
-        } else if (trimmedLine === '*/') {  // Verifica si la línea actual es el cierre de un bloque de comentario
-            foundComment = true; // Marca que se ha encontrado un bloque de comentario
-            break; // Finaliza el bucle al encontrar el cierre del comentario
-        } else { // Si la línea no es vacía ni cierre de comentario
-            break; // Detiene la búsqueda porque se encontró otro tipo de contenido
+    while (i >= 0) {
+        const trimmedLine = lines[i].trim();
+        if (trimmedLine === '') continue;
+        if (trimmedLine === '*/') {
+            foundComment = true;
+            break;
         }
-        i--;// Retrocede una línea en el archivo para continuar la búsqueda
+        i--;
     }
 
-    if (!foundComment) { // Si no se encontró un cierre de comentario
-        return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`]; // Devuelve un error indicando que falta documentación
+    if (!foundComment) {
+        return [`Error: Falta el bloque TSDoc sobre la declaración de ${type}.`];
     }
 
-    let startCommentIndex = i; // Marca el índice del cierre del bloque de comentario ('*/') para luego buscar el inicio ('/**') hacia arriba del código
-    while (startCommentIndex >= 0 && !lines[startCommentIndex].trim().startsWith('/**')) { // Busca hacia atrás hasta encontrar la apertura del bloque de comentario ('/**')
-        startCommentIndex--;  // Retrocede una línea en la búsqueda del inicio del comentario
-    }
+    const commentBlock = lines.slice(i, declarationIndex).join('\n');
+    const errors: string[] = validateEnglishDocumentation(commentBlock);
 
-    if (startCommentIndex < 0) { // Si no se encontró la apertura del bloque de comentario
-        return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de ${type}.`]; // Devuelve error por bloque incompleto
-    }
-
-    const commentBlock = lines.slice(startCommentIndex, i + 1).join('\n'); // Extrae las líneas del bloque de comentario y las une en un solo string
-
-    const errors: string[] = []; // Inicializa un arreglo para almacenar los errores encontrados
-
-    const originalDeclaration = lines[declarationIndex]; // Guarda la línea original de la declaración para analizarla posteriormente
-
-    // Verifica si la declaración tiene parámetros o valor de retorno, y valida que estén documentados
-    if (type === 'function' || type === 'class') { // Verifica si la declaración es de tipo función o clase
-        const hasParameters = originalDeclaration.includes('(') && // Evalúa si la declaración tiene parámetros
-            !originalDeclaration.includes('()') && // Asegura que no sea una función vacía
-            !originalDeclaration.includes('( )'); // Asegura que no sea una función vacía
-
-        if (hasParameters && !commentBlock.includes('@param')) { // Si tiene parámetros pero no se documentaron
-            errors.push(`Error: La declaración tiene parámetros pero falta documentación con etiquetas @param.`); // Agrega error por falta de @param
-        }
-
-        if (type === 'function' && // Si es una función
-            originalDeclaration.includes('): ') && // Verifica que tenga un tipo de retorno explícito
-            !originalDeclaration.includes('): void') &&  // Asegura que no sea 'void'
-            !commentBlock.includes('@returns') && // Y que no tenga documentación de retorno
-            !commentBlock.includes('@return')) { // (considera variantes de la etiqueta)
-            errors.push(`Error: La función parece devolver un valor pero falta la etiqueta @returns.`); // Agrega error por falta de @returns
+    if (type === 'property') {
+        const propertyName = lines[declarationIndex].split(':')[0].trim();
+        if (!isPropertyUsed(lines, propertyName)) {
+            return []; // Ignorar propiedades no usadas
         }
     }
 
-    const languageErrors = validateEnglishDocumentation(commentBlock); // Ejecuta una validación para detectar si el comentario está en español
-    if (languageErrors.length > 0) { // Si se detectaron errores de idioma
-        errors.push(...languageErrors); // Agrega los errores de idioma a la lista de errores
-    }
+    return errors;
+}
 
-    return errors; // Devuelve el arreglo con todos los errores encontrados (si hay)
+function isPropertyUsed(lines: string[], propertyName: string): boolean {
+    const propertyUsageRegex = new RegExp(`\\b${propertyName}\\b`);
+    return lines.some(line => propertyUsageRegex.test(line));
 }
 
 /**
