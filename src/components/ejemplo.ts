@@ -11,24 +11,9 @@
  * @since 2025-04-25
  */
 class Usuario {
-    /** The user's name. */
-    nombre: string;
 
-    /** The user's email address.
-     * @property correo is a data.
-     * */
-    correo: string;
 
-    /**
-     * Creates an instance of Usuario.
-     *
-     * @param nombre - the comment in english .
-     * @param correo - The user's email address.
-     */
-    constructor(nombre: string, correo: string) {
-        this.nombre = nombre;
-        this.correo = correo;
-    }
+
 
     /**
      * Returns a greeting for the user.
