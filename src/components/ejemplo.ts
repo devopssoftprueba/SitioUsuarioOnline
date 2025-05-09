@@ -14,7 +14,9 @@ class Usuario {
     /** The user's name. */
     nombre: string;
 
-    /** The user's email address. */
+    /** The user's email address.
+     * @property correo is a data.
+     * */
     correo: string;
 
     /**
