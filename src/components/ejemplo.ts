@@ -24,7 +24,7 @@ class Usuario {
 
 
     /**
-     * Returns a greeting for the user.
+     * esto debe estar en ingles pero lo tengo en español.
      *
      * @returns  español español.
      */
