@@ -5,18 +5,21 @@ import { readFileSync, existsSync } from 'fs';
 // Importa todas las funcionalidades del módulo path para manejar rutas de archivos
 import * as path from 'path';
 
-const rules = { //objeto en el que defino las reglas que utilizará el script para realizar la validación.
+const rules = {
     'class': {
-        requiredTags: ['@description'],
-        optionalTags: ['@example', '@remarks', '@deprecated']
+        requiredTags: [], // rules tu class
+        optionalTags: ['@description', '@example', '@remarks', '@deprecated', '@category', '@package',
+            '@author', '@version', '@since', '@decorator', '@view']
     },
     'function': {
-        requiredTags: ['@param', '@returns'],
-        optionalTags: ['@example', '@throws', '@remarks', '@deprecated']
+        requiredTags: [], // rules to function
+        optionalTags: ['@param', '@returns', '@throws', '@example', '@remarks', '@deprecated',
+            '@method', '@event', '@computed']
     },
     'property': {
-        requiredTags: ['@description'],
-        optionalTags: ['@defaultValue', '@remarks', '@deprecated']
+        requiredTags: [], // rules to property
+        optionalTags: ['@description', '@defaultValue', '@remarks', '@deprecated', '@prop',
+            '@data', '@input', '@output', '@property']
     }
 };
 
