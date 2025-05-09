@@ -12,7 +12,15 @@
  */
 class Usuario {
 
-
+    /**
+     * Sets the user's name.
+     *
+     * @param name - The new name to assign to the user.
+     * @returns void
+     */
+    establecerNombre(name: string): void {
+        this.nombre = name;
+    }
 
 
     /**
