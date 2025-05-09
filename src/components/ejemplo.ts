@@ -26,7 +26,7 @@ class Usuario {
     /**
      * solo cvbcvbcaqui.
      *
-     * @returns  español español.
+     *
      */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
