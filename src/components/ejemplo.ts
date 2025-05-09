@@ -24,9 +24,9 @@ class Usuario {
 
 
     /**
-     * español español español sdfsdfsdf
+     * Returns a greeting message for the user.
      *
-     *
+     * @returns A personalized greeting string.
      */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
