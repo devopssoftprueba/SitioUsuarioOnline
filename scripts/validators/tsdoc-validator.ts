@@ -201,27 +201,42 @@ function findDeclarationLine(
     while (i >= 0) {
         const currentLine = lines[i].trim();
 
-        // Ignorar líneas vacías y comentarios
-        if (currentLine === '' || currentLine.startsWith('//') ||
-            currentLine.startsWith('*') || currentLine.startsWith('/*')) {
-            i--;
-            continue;
-        }
-
         // Si encontramos una declaración válida
         const type = determineDeclarationType(currentLine);
 
-        // Si estamos dentro de una clase (nestingLevel > 0), priorizamos funciones y propiedades
-        if (nestingLevel > 0 && type === 'class') {
-            i--;
-            continue;
-        }
-
         if (type) {
-            return {
-                index: i,
-                type: type
-            };
+            // Verificar si hay un bloque de comentarios TSDoc justo antes
+            let j = i - 1;
+            let foundTSDoc = false;
+
+            // Retroceder saltando líneas en blanco
+            while (j >= 0 && lines[j].trim() === '') {
+                j--;
+            }
+
+            // Buscar el cierre del comentario
+            if (j >= 0 && lines[j].trim() === '*/') {
+                foundTSDoc = true;
+                // Si encontramos el cierre, buscamos la apertura
+                while (j >= 0 && !lines[j].trim().startsWith('/**')) {
+                    j--;
+                }
+                // Si encontramos la apertura, esta es la verdadera línea de declaración
+                if (j >= 0 && lines[j].trim().startsWith('/**')) {
+                    return {
+                        index: i,
+                        type: type
+                    };
+                }
+            }
+
+            // Si no hay TSDoc y no es una clase anidada
+            if (!foundTSDoc && (nestingLevel === 0 || type !== 'class')) {
+                return {
+                    index: i,
+                    type: type
+                };
+            }
         }
 
         // Si encontramos una llave de cierre, saltamos el bloque
@@ -288,51 +303,32 @@ function validateDocumentation(
     declarationIndex: number,
     type: keyof typeof rules
 ): string[] {
+    // Buscar el comentario TSDoc arriba de la declaración
     let i = declarationIndex - 1;
     let foundComment = false;
 
-    // Buscamos hacia arriba saltando espacios en blanco hasta encontrar un comentario
-    while (i >= 0) {
-        const trimmedLine = lines[i].trim();
-        if (trimmedLine === '') {
-            i--;
-            continue;
-        }
-        if (trimmedLine === '*/') {
-            foundComment = true;
-            break;
-        }
-        // Si encontramos código antes de un comentario, no hay documentación
-        if (trimmedLine !== '' && !trimmedLine.startsWith('//')) {
-            break;
-        }
+    // Saltamos espacios en blanco
+    while (i >= 0 && lines[i].trim() === '') {
         i--;
     }
 
-    if (!foundComment) {
+    // Verificar si hay un bloque de comentarios TSDoc
+    if (i >= 0 && lines[i].trim() === '*/') {
+        foundComment = true;
+        // Retroceder hasta encontrar el inicio del comentario
+        while (i >= 0 && !lines[i].trim().startsWith('/**')) {
+            i--;
+        }
+    }
+
+    if (!foundComment || i < 0) {
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type} en línea ${declarationIndex + 1}.`];
     }
 
-    const startCommentIndex = i;
-    while (i >= 0 && !lines[i].trim().startsWith('/**')) {
-        i--;
-    }
-
-    if (i < 0) {
-        return [`Error: Se encontró un cierre de comentario sin apertura para la declaración de ${type} en línea ${declarationIndex + 1}.`];
-    }
-
-    const commentBlock = lines.slice(i, startCommentIndex + 1).join('\n');
-    logDebug(`Bloque de comentarios encontrado para línea ${declarationIndex + 1}:\n${commentBlock}`);
-
-    const errors: string[] = validateEnglishDocumentation(commentBlock);
-    if (errors.length > 0) {
-        logDebug(`Errores detectados en el bloque de comentarios para línea ${declarationIndex + 1}: ${errors.join(', ')}`);
-    }
-
-    return errors;
+    // Validar que el comentario esté en inglés
+    const commentBlock = lines.slice(i, declarationIndex).join('\n');
+    return validateEnglishDocumentation(commentBlock);
 }
-
 /**
  * Válida un archivo verificando la documentación correcta en los cambios.
  *
