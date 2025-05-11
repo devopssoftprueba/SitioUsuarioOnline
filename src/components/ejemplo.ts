@@ -23,7 +23,11 @@ class Usuario {
     }
 
 
-
+    /**
+     * the description
+     *
+     * @returns A personalized greeting string.
+     */
     saludar(): string {
         return `Hola, ${this.nombre}!`;
     }
