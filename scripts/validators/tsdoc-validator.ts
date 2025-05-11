@@ -203,6 +203,9 @@ function findDeclarationLine(
 ): { index: number; type: keyof typeof rules } | null {
     let i = startIndex;
 
+    // Añadir esta línea para usar analyzeContext
+    const nestingLevel = analyzeContext(lines, startIndex);
+
     while (i >= 0) {
         const currentLine = lines[i].trim();
 
@@ -219,30 +222,151 @@ function findDeclarationLine(
         // Obtener el tipo de declaración
         const type = determineDeclarationType(currentLine);
         if (type !== null) {
+            // Añadir esta condición para usar nestingLevel
+            if (nestingLevel > 0 && type === 'class') {
+                i--;
+                continue;
+            }
             return {
                 index: i,
                 type: type
             };
         }
 
-        // Si encontramos una llave de cierre, saltar el bloque
-        if (currentLine === '}') {
-            let bracketCount = 1;
-            i--;
-            while (i >= 0 && bracketCount > 0) {
-                const line = lines[i].trim();
-                if (line === '}') bracketCount++;
-                if (line === '{') bracketCount--;
-                i--;
-            }
-            continue;
-        }
-
+        // El resto de la función sigue igual...
         i--;
     }
 
     return null;
 }
+
+/**
+ * Extrae el nombre del parámetro limpio de una declaración de parámetro.
+ *
+ * @param param - Texto del parámetro
+ * @returns Nombre del parámetro limpio
+ */
+function extractParamName(param: string): string {
+    // Eliminar modificadores de acceso
+    let cleaned = param.replace(/^(readonly|public|private|protected)\s+/, '');
+
+    // Extraer solo el nombre antes de : o =
+    const parts = cleaned.split(/[:=]/);
+    cleaned = parts[0].trim();
+
+    // Eliminar operador rest si existe
+    cleaned = cleaned.replace(/^\.\.\./, '');
+
+    return cleaned;
+}
+
+function analyzeFunctionSignature(
+    declarationLine: string,
+    lines: string[],
+    index: number
+): { parameters: string[], hasReturn: boolean } {
+    // Extraer parámetros
+    const paramMatch = declarationLine.match(/\(([^)]*)\)/);
+    const parameters: string[] = [];
+
+    if (paramMatch && paramMatch[1]) {
+        const paramString = paramMatch[1].trim();
+        if (paramString) {
+            // Análisis más robusto de parámetros
+            let inTemplate = 0;
+            let currentParam = '';
+            let bracketCount = 0;
+
+            for (let i = 0; i < paramString.length; i++) {
+                const char = paramString[i];
+
+                if (char === '<') inTemplate++;
+                else if (char === '>') inTemplate--;
+                else if (char === '{') bracketCount++;
+                else if (char === '}') bracketCount--;
+                else if (char === ',' && inTemplate === 0 && bracketCount === 0) {
+                    if (currentParam.trim()) {
+                        parameters.push(extractParamName(currentParam.trim()));
+                    }
+                    currentParam = '';
+                    continue;
+                }
+
+                currentParam += char;
+            }
+
+            if (currentParam.trim()) {
+                parameters.push(extractParamName(currentParam.trim()));
+            }
+        }
+    }
+
+    // Detectar si la función tiene un valor de retorno
+    let hasReturn = false;
+
+    // Buscar en la línea de declaración si hay un tipo de retorno
+    if (declarationLine.includes(':') && !declarationLine.includes(': void')) {
+        hasReturn = true;
+    } else if (declarationLine.includes('=> {') || declarationLine.includes('=>{')) {
+        // Arrow function con bloque
+        hasReturn = detectReturnInFunction(lines, index);
+    } else if (declarationLine.includes('=>') && !declarationLine.includes('=> void')) {
+        // Arrow function con retorno implícito
+        hasReturn = true;
+    } else if (declarationLine.includes('{')) {
+        // Función normal con bloque
+        hasReturn = detectReturnInFunction(lines, index);
+    }
+
+    return { parameters, hasReturn };
+}
+
+/**
+ * Detecta si una función tiene sentencias return en su cuerpo.
+ *
+ * @param lines - Líneas del archivo
+ * @param startIndex - Índice donde comienza la función
+ * @returns true si la función tiene al menos un return que no sea void
+ */
+function detectReturnInFunction(lines: string[], startIndex: number): boolean {
+    let bracketCount = 0;
+    let startCounting = false;
+
+    // Buscar la llave de apertura de la función
+    for (let i = startIndex; i < lines.length; i++) {
+        if (lines[i].includes('{')) {
+            startCounting = true;
+            bracketCount = 1;
+
+            // Si en la misma línea hay un return, verificar
+            if (lines[i].includes('return ') && !lines[i].includes('return;') && !lines[i].includes('return undefined') && !lines[i].includes('return void')) {
+                return true;
+            }
+
+            continue;
+        }
+
+        if (!startCounting) continue;
+
+        // Contar llaves para saber cuándo termina la función
+        for (const char of lines[i]) {
+            if (char === '{') bracketCount++;
+            else if (char === '}') {
+                bracketCount--;
+                if (bracketCount === 0) return false; // Fin de la función sin return
+            }
+        }
+
+        // Verificar si hay un return en esta línea
+        if (lines[i].includes('return ') && !lines[i].includes('return;') && !lines[i].includes('return undefined') && !lines[i].includes('return void')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 /**
  * Verifica si la documentación está en inglés.
  *
@@ -288,9 +412,12 @@ function validateDocumentation(
     declarationIndex: number,
     type: keyof typeof rules
 ): string[] {
+    const errors: string[] = [];
+
     // Buscar el comentario TSDoc arriba de la declaración
     let i = declarationIndex - 1;
     let foundComment = false;
+    let commentStartIndex = -1;
 
     // Saltamos espacios en blanco
     while (i >= 0 && lines[i].trim() === '') {
@@ -298,21 +425,97 @@ function validateDocumentation(
     }
 
     // Verificar si hay un bloque de comentarios TSDoc
-    if (i >= 0 && lines[i].trim() === '*/') {
+    if (i >= 0 && String(lines[i]).trim() === '*/') {
         foundComment = true;
         // Retroceder hasta encontrar el inicio del comentario
-        while (i >= 0 && !lines[i].trim().startsWith('/**')) {
+        while (i >= 0 && !String(lines[i]).trim().startsWith('/**')) {
             i--;
         }
+        commentStartIndex = i;
     }
 
-    if (!foundComment || i < 0) {
+    if (!foundComment || commentStartIndex < 0) {
         return [`Error: Falta el bloque TSDoc sobre la declaración de ${type} en línea ${declarationIndex + 1}.`];
     }
 
+    // Obtener el bloque de comentarios completo y asegurar que trabajamos con strings
+    const commentBlock = lines
+        .slice(commentStartIndex, declarationIndex)
+        .map(line => String(line))
+        .join('\n');
+    const commentLines = commentBlock.split('\n').map(line => String(line));
+
     // Validar que el comentario esté en inglés
-    const commentBlock = lines.slice(i, declarationIndex).join('\n');
-    return validateEnglishDocumentation(commentBlock);
+    const englishErrors = validateEnglishDocumentation(commentBlock);
+    if (englishErrors.length > 0) {
+        errors.push(...englishErrors);
+    }
+
+    // Obtener todas las etiquetas presentes en el comentario
+    const tagRegex = /^\s*\*\s*@(\w+)/;
+    const presentTags = new Set<string>();
+
+    for (const line of commentLines) {
+        const match = line.match(tagRegex);
+        if (match && match[1]) {
+            presentTags.add(match[1]);
+        }
+    }
+
+    // Verificar etiquetas requeridas según las reglas
+    const ruleSet = rules[type];
+    if (ruleSet && Array.isArray(ruleSet.requiredTags)) {
+        for (const tag of ruleSet.requiredTags) {
+            // Asegurarnos de que tag es un string
+            const tagName = String(tag).replace('@', '');
+            if (!presentTags.has(tagName)) {
+                errors.push(`Error: Falta la etiqueta requerida @${tagName} en la documentación de la línea ${declarationIndex + 1}.`);
+            }
+        }
+    }
+
+    // Para funciones, verificar parámetros y retorno basado en la firma
+    if (type === 'function') {
+        const declarationLine = String(lines[declarationIndex]);
+        const { parameters, hasReturn } = analyzeFunctionSignature(declarationLine, lines, declarationIndex);
+
+        // Verificar documentación de parámetros
+        if (parameters.length > 0) {
+            const paramDocs = commentLines.filter(line =>
+                String(line).trim().match(/^\s*\*\s*@param\b/)
+            );
+
+            const documentedParams = new Set<string>();
+            for (const paramDoc of paramDocs) {
+                // Extraer nombre de parámetro documentado (diferentes formatos posibles)
+                const paramMatch = String(paramDoc).match(/@param\s+(?:\{[^}]*\s+)?(\w+)/);
+                if (paramMatch && paramMatch[1]) {
+                    documentedParams.add(paramMatch[1]);
+                }
+            }
+
+            // Verificar que todos los parámetros están documentados
+            for (const param of parameters) {
+                if (param && !documentedParams.has(param)) {
+                    errors.push(`Error: Parámetro '${param}' no está documentado con @param en la línea ${declarationIndex + 1}.`);
+                }
+            }
+        }
+
+        // Verificar documentación de retorno solo si la función tiene retorno
+        if (hasReturn) {
+            const hasReturnDoc = commentLines.some(line =>
+                String(line).trim().match(/^\s*\*\s*@returns\b/) ||
+                String(line).trim().match(/^\s*\*\s*@return\b/)
+            );
+
+            if (!hasReturnDoc) {
+                errors.push(`Error: Falta documentación @returns para el valor de retorno en la línea ${declarationIndex + 1}.`);
+            }
+        }
+    }
+
+    return errors;
 }
 /**
  * Válida un archivo verificando la documentación correcta en los cambios.
