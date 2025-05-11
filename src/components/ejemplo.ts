@@ -15,7 +15,7 @@ class Usuario {
     /**
      * Sets the user's name.
      *
-     * @param name - esto esta en español.
+     * @param name - The new name to assign to the user.
      * @returns void
      */
     establecerNombre(name: string): void {
