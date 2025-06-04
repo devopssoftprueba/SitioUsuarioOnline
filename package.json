@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "ejemplo de front",
   "main": "index.ts",
+  "type": "module",
   "scripts": {
     "lint:docs": "eslint . -c .eslintrc.js --ext .ts,.tsx --format codeframe --max-warnings 0"
   },
