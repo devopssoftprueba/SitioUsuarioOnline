@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="rename rules 1" />
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="actualizar reglas 1">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -130,15 +132,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="8234000" />
-    </task>
-    <task id="LOCAL-00157" summary="retorno a archivo inicial funcional - prueba 2">
-      <option name="closed" value="true" />
-      <created>1746797720272</created>
-      <option name="number" value="00157" />
-      <option name="presentableId" value="LOCAL-00157" />
-      <option name="project" value="LOCAL" />
-      <updated>1746797720272</updated>
+      <workItem from="1749053910456" duration="10504000" />
     </task>
     <task id="LOCAL-00158" summary="retorno a archivo inicial funcional - prueba 3">
       <option name="closed" value="true" />
@@ -524,7 +518,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749070428777</updated>
     </task>
-    <option name="localTasksCounter" value="206" />
+    <task id="LOCAL-00206" summary="actualizar reglas 1">
+      <option name="closed" value="true" />
+      <created>1749071053544</created>
+      <option name="number" value="00206" />
+      <option name="presentableId" value="LOCAL-00206" />
+      <option name="project" value="LOCAL" />
+      <updated>1749071053544</updated>
+    </task>
+    <option name="localTasksCounter" value="207" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -542,7 +544,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x10 - prueba" />
     <MESSAGE value="optimización del script x10 - prueba 1" />
     <MESSAGE value="optimización del script x10 - prueba 2" />
     <MESSAGE value="optimización del script x11 - prueba" />
@@ -567,6 +568,7 @@
     <MESSAGE value="modifico ruta de reglas 4" />
     <MESSAGE value="rename rules" />
     <MESSAGE value="rename rules 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="rename rules 1" />
+    <MESSAGE value="actualizar reglas 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizar reglas 1" />
   </component>
 </project>
