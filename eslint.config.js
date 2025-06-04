@@ -17,7 +17,16 @@ export default [
             "tsdoc": tsdocPlugin
         },
         rules: {
-            "tsdoc/syntax": "warn"
+            // Reglas que bloquearán el push (error)
+            "@typescript-eslint/no-explicit-any": "error",
+            "@typescript-eslint/explicit-function-return-type": "error",
+            "@typescript-eslint/no-unused-vars": "error",
+            "@typescript-eslint/no-empty-function": "error",
+
+            // Reglas que solo mostrarán advertencias
+            "tsdoc/syntax": "error",
+            "no-console": "warn",
+            "@typescript-eslint/no-inferrable-types": "warn"
         }
     }
 ];

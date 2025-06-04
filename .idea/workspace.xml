@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="modifico ruta de reglas 2" />
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="rename rules 1" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -130,39 +130,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="7371000" />
-    </task>
-    <task id="LOCAL-00153" summary="optimizar 23 - Prueba 1">
-      <option name="closed" value="true" />
-      <created>1746743162976</created>
-      <option name="number" value="00153" />
-      <option name="presentableId" value="LOCAL-00153" />
-      <option name="project" value="LOCAL" />
-      <updated>1746743162976</updated>
-    </task>
-    <task id="LOCAL-00154" summary="optimizar 23 - Prueba 2">
-      <option name="closed" value="true" />
-      <created>1746743189665</created>
-      <option name="number" value="00154" />
-      <option name="presentableId" value="LOCAL-00154" />
-      <option name="project" value="LOCAL" />
-      <updated>1746743189665</updated>
-    </task>
-    <task id="LOCAL-00155" summary="retorno a archivo inicial funcional">
-      <option name="closed" value="true" />
-      <created>1746743698835</created>
-      <option name="number" value="00155" />
-      <option name="presentableId" value="LOCAL-00155" />
-      <option name="project" value="LOCAL" />
-      <updated>1746743698835</updated>
-    </task>
-    <task id="LOCAL-00156" summary="retorno a archivo inicial funcional - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746743723788</created>
-      <option name="number" value="00156" />
-      <option name="presentableId" value="LOCAL-00156" />
-      <option name="project" value="LOCAL" />
-      <updated>1746743723788</updated>
+      <workItem from="1749053910456" duration="8234000" />
     </task>
     <task id="LOCAL-00157" summary="retorno a archivo inicial funcional - prueba 2">
       <option name="closed" value="true" />
@@ -524,7 +492,39 @@
       <option name="project" value="LOCAL" />
       <updated>1749069805384</updated>
     </task>
-    <option name="localTasksCounter" value="202" />
+    <task id="LOCAL-00202" summary="modifico ruta de reglas 3">
+      <option name="closed" value="true" />
+      <created>1749070018228</created>
+      <option name="number" value="00202" />
+      <option name="presentableId" value="LOCAL-00202" />
+      <option name="project" value="LOCAL" />
+      <updated>1749070018228</updated>
+    </task>
+    <task id="LOCAL-00203" summary="modifico ruta de reglas 4">
+      <option name="closed" value="true" />
+      <created>1749070180086</created>
+      <option name="number" value="00203" />
+      <option name="presentableId" value="LOCAL-00203" />
+      <option name="project" value="LOCAL" />
+      <updated>1749070180086</updated>
+    </task>
+    <task id="LOCAL-00204" summary="rename rules">
+      <option name="closed" value="true" />
+      <created>1749070322471</created>
+      <option name="number" value="00204" />
+      <option name="presentableId" value="LOCAL-00204" />
+      <option name="project" value="LOCAL" />
+      <updated>1749070322471</updated>
+    </task>
+    <task id="LOCAL-00205" summary="rename rules 1">
+      <option name="closed" value="true" />
+      <created>1749070428777</created>
+      <option name="number" value="00205" />
+      <option name="presentableId" value="LOCAL-00205" />
+      <option name="project" value="LOCAL" />
+      <updated>1749070428777</updated>
+    </task>
+    <option name="localTasksCounter" value="206" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -542,10 +542,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x8 -" />
-    <MESSAGE value="optimización del script x8 - prueba 1" />
-    <MESSAGE value="optimización del script x9 - prueba" />
-    <MESSAGE value="optimización del script x9 - prueba 1" />
     <MESSAGE value="optimización del script x10 - prueba" />
     <MESSAGE value="optimización del script x10 - prueba 1" />
     <MESSAGE value="optimización del script x10 - prueba 2" />
@@ -567,6 +563,10 @@
     <MESSAGE value="modifico ruta de reglas" />
     <MESSAGE value="modifico ruta de reglas 1" />
     <MESSAGE value="modifico ruta de reglas 2" />
-    <option name="LAST_COMMIT_MESSAGE" value="modifico ruta de reglas 2" />
+    <MESSAGE value="modifico ruta de reglas 3" />
+    <MESSAGE value="modifico ruta de reglas 4" />
+    <MESSAGE value="rename rules" />
+    <MESSAGE value="rename rules 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="rename rules 1" />
   </component>
 </project>
