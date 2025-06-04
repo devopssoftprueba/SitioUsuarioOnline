@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="actualizacion completa">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="modifico ruta de reglas 1">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,23 +130,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="6221000" />
-    </task>
-    <task id="LOCAL-00150" summary="optimizar 23 -">
-      <option name="closed" value="true" />
-      <created>1746742749976</created>
-      <option name="number" value="00150" />
-      <option name="presentableId" value="LOCAL-00150" />
-      <option name="project" value="LOCAL" />
-      <updated>1746742749976</updated>
-    </task>
-    <task id="LOCAL-00151" summary="optimizar 23 - Prueba 1">
-      <option name="closed" value="true" />
-      <created>1746742787819</created>
-      <option name="number" value="00151" />
-      <option name="presentableId" value="LOCAL-00151" />
-      <option name="project" value="LOCAL" />
-      <updated>1746742787819</updated>
+      <workItem from="1749053910456" duration="6774000" />
     </task>
     <task id="LOCAL-00152" summary="optimizar 23 - Prueba 1">
       <option name="closed" value="true" />
@@ -524,7 +508,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749068366879</updated>
     </task>
-    <option name="localTasksCounter" value="199" />
+    <task id="LOCAL-00199" summary="modifico ruta de reglas">
+      <option name="closed" value="true" />
+      <created>1749068588718</created>
+      <option name="number" value="00199" />
+      <option name="presentableId" value="LOCAL-00199" />
+      <option name="project" value="LOCAL" />
+      <updated>1749068588718</updated>
+    </task>
+    <task id="LOCAL-00200" summary="modifico ruta de reglas 1">
+      <option name="closed" value="true" />
+      <created>1749068731303</created>
+      <option name="number" value="00200" />
+      <option name="presentableId" value="LOCAL-00200" />
+      <option name="project" value="LOCAL" />
+      <updated>1749068731303</updated>
+    </task>
+    <option name="localTasksCounter" value="201" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -542,8 +542,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x6 - prueba" />
-    <MESSAGE value="optimización del script x6 - prueba 1" />
     <MESSAGE value="optimización del script x7 - prueba" />
     <MESSAGE value="optimización del script x8 -" />
     <MESSAGE value="optimización del script x8 - prueba 1" />
@@ -567,6 +565,8 @@
     <MESSAGE value="optimización del script x15 - prueba 3" />
     <MESSAGE value="optimización del script x15 - esta es la definitiva, hago push despues de correcto funcionamiento total" />
     <MESSAGE value="actualizacion completa" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizacion completa" />
+    <MESSAGE value="modifico ruta de reglas" />
+    <MESSAGE value="modifico ruta de reglas 1" />
+    <option name="LAST_COMMIT_MESSAGE" value="modifico ruta de reglas 1" />
   </component>
 </project>
