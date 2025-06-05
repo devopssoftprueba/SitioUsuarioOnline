@@ -25,10 +25,7 @@ const emit = defineEmits<{
     (event: 'favorite', gameId: number): void;
 }>();
 
-/**
- * Handles the play button click
- * @param gameId - The game identifier
- */
+
 const handlePlay = (gameId: number): void => {
     emit('play', gameId);
 };
