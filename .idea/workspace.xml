@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba 1 (debe fallar)" />
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="solucion errores con .js">
+      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -130,23 +134,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="16401000" />
-    </task>
-    <task id="LOCAL-00170" summary="optimización del script x5 - prueba">
-      <option name="closed" value="true" />
-      <created>1746813160435</created>
-      <option name="number" value="00170" />
-      <option name="presentableId" value="LOCAL-00170" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813160435</updated>
-    </task>
-    <task id="LOCAL-00171" summary="optimización del script x5 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746813196495</created>
-      <option name="number" value="00171" />
-      <option name="presentableId" value="LOCAL-00171" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813196495</updated>
+      <workItem from="1749053910456" duration="16747000" />
     </task>
     <task id="LOCAL-00172" summary="optimización del script x6 - prueba">
       <option name="closed" value="true" />
@@ -524,7 +512,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749139890865</updated>
     </task>
-    <option name="localTasksCounter" value="219" />
+    <task id="LOCAL-00219" summary="prueba 1 (debe fallar 1)">
+      <option name="closed" value="true" />
+      <created>1749140164084</created>
+      <option name="number" value="00219" />
+      <option name="presentableId" value="LOCAL-00219" />
+      <option name="project" value="LOCAL" />
+      <updated>1749140164084</updated>
+    </task>
+    <task id="LOCAL-00220" summary="solucion errores con .js">
+      <option name="closed" value="true" />
+      <created>1749140481711</created>
+      <option name="number" value="00220" />
+      <option name="presentableId" value="LOCAL-00220" />
+      <option name="project" value="LOCAL" />
+      <updated>1749140481711</updated>
+    </task>
+    <option name="localTasksCounter" value="221" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -542,8 +546,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x15 - prueba 1" />
-    <MESSAGE value="optimización del script x15 - prueba 2" />
     <MESSAGE value="optimización del script x15 - prueba 3" />
     <MESSAGE value="optimización del script x15 - esta es la definitiva, hago push despues de correcto funcionamiento total" />
     <MESSAGE value="actualizacion completa" />
@@ -567,6 +569,8 @@
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones" />
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones 1" />
     <MESSAGE value="prueba 1 (debe fallar)" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba 1 (debe fallar)" />
+    <MESSAGE value="prueba 1 (debe fallar 1)" />
+    <MESSAGE value="solucion errores con .js" />
+    <option name="LAST_COMMIT_MESSAGE" value="solucion errores con .js" />
   </component>
 </project>
