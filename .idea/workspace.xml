@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba sin tsdoc">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="actualizar dependencias">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,15 +135,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="13828000" />
-    </task>
-    <task id="LOCAL-00164" summary="optimización del script x2 -">
-      <option name="closed" value="true" />
-      <created>1746811374059</created>
-      <option name="number" value="00164" />
-      <option name="presentableId" value="LOCAL-00164" />
-      <option name="project" value="LOCAL" />
-      <updated>1746811374060</updated>
+      <workItem from="1749053910456" duration="14248000" />
     </task>
     <task id="LOCAL-00165" summary="optimización del script x2 - prueba 1">
       <option name="closed" value="true" />
@@ -526,7 +521,15 @@
       <option name="project" value="LOCAL" />
       <updated>1749136903786</updated>
     </task>
-    <option name="localTasksCounter" value="213" />
+    <task id="LOCAL-00213" summary="actualizar dependencias">
+      <option name="closed" value="true" />
+      <created>1749137668899</created>
+      <option name="number" value="00213" />
+      <option name="presentableId" value="LOCAL-00213" />
+      <option name="project" value="LOCAL" />
+      <updated>1749137668899</updated>
+    </task>
+    <option name="localTasksCounter" value="214" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +547,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x12 - prueba 2" />
     <MESSAGE value="optimización del script x13 - prueba" />
     <MESSAGE value="optimización del script x14 - prueba" />
     <MESSAGE value="optimización del script x14 - prueba 1" />
@@ -569,6 +571,7 @@
     <MESSAGE value="nuevo archivo (sin una constante)" />
     <MESSAGE value="actualizo reglas" />
     <MESSAGE value="prueba sin tsdoc" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba sin tsdoc" />
+    <MESSAGE value="actualizar dependencias" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizar dependencias" />
   </component>
 </project>
