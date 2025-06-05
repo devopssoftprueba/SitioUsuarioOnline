@@ -2,6 +2,7 @@ import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import tsdocPlugin from 'eslint-plugin-tsdoc';
 import vueParser from 'vue-eslint-parser';
+import jsdoc from 'eslint-plugin-jsdoc';
 
 export default [
     {
@@ -17,11 +18,25 @@ export default [
         },
         plugins: {
             "@typescript-eslint": typescript,
-            "tsdoc": tsdocPlugin
+            "tsdoc": tsdocPlugin,
+            "jsdoc": jsdoc
         },
         rules: {
-            // Reglas TSDoc
+            // Reglas TSDoc y JSDoc
             "tsdoc/syntax": "error",
+            "jsdoc/require-jsdoc": ["error", {
+                "publicOnly": true,
+                "require": {
+                    "FunctionDeclaration": true,
+                    "MethodDefinition": true,
+                    "PropertyDefinition": true,
+                    "ClassDeclaration": true,
+                    "ArrowFunctionExpression": true
+                }
+            }],
+            "jsdoc/check-param-names": "error",
+            "jsdoc/check-tag-names": "error",
+            "jsdoc/check-types": "error",
 
             // Tipos explícitos
             "@typescript-eslint/explicit-function-return-type": ["error", {
@@ -32,18 +47,6 @@ export default [
                 "accessibility": "explicit"
             }],
             "@typescript-eslint/explicit-module-boundary-types": "error",
-
-            // Documentación obligatoria
-            "@typescript-eslint/require-jsdoc": ["error", {
-                "require": {
-                    "FunctionDeclaration": true,
-                    "MethodDefinition": true,
-                    "PropertyDefinition": true,
-                    "ClassDeclaration": true,
-                    "ArrowFunctionExpression": true,
-                    "VariableDeclaration": true
-                }
-            }],
 
             // Reglas Vue
             "vue/component-api-style": ["error", ["script-setup"]],
