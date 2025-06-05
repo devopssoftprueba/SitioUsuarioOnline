@@ -30,7 +30,19 @@ export default [
             // Forzar documentación en funciones y métodos
             "@typescript-eslint/explicit-module-boundary-types": "error",
 
-            // Otras reglas estrictas
+            // Nueva regla para exigir documentación en todas las declaraciones
+            "@typescript-eslint/require-jsdoc": ["error", {
+                "require": {
+                    "FunctionDeclaration": true,
+                    "MethodDefinition": true,
+                    "PropertyDefinition": true,
+                    "ClassDeclaration": true,
+                    "ArrowFunctionExpression": true,
+                    "VariableDeclaration": true
+                }
+            }],
+
+            // Otras reglas estrictas (se mantienen igual)
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-unused-vars": ["error", {
                 "argsIgnorePattern": "^_",
