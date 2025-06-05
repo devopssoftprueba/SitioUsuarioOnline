@@ -25,9 +25,6 @@ const emit = defineEmits<{
     (event: 'favorite', gameId: number): void;
 }>();
 
-
-
-
 const handlePlay = (gameId: number): void => {
     emit('play', gameId);
 };
