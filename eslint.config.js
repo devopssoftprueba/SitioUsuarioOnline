@@ -1,6 +1,7 @@
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import tsdocPlugin from 'eslint-plugin-tsdoc';
+import vueParser from 'vue-eslint-parser';
 
 export default [
     {
@@ -10,8 +11,8 @@ export default [
             parserOptions: {
                 ecmaVersion: "latest",
                 sourceType: "module",
-                extraFileExtensions: [".vue"], // Importante para archivos Vue
-                parser: "vue-eslint-parser"    // Parser específico para Vue
+                extraFileExtensions: [".vue"],
+                parser: vueParser
             }
         },
         plugins: {
@@ -19,8 +20,10 @@ export default [
             "tsdoc": tsdocPlugin
         },
         rules: {
-            // Documentación obligatoria
-            "tsdoc/syntax": "warn",
+            // Reglas TSDoc
+            "tsdoc/syntax": "error",
+
+            // Tipos explícitos
             "@typescript-eslint/explicit-function-return-type": ["error", {
                 "allowExpressions": false,
                 "allowTypedFunctionExpressions": false
@@ -28,11 +31,9 @@ export default [
             "@typescript-eslint/explicit-member-accessibility": ["error", {
                 "accessibility": "explicit"
             }],
-
-            // Forzar documentación en funciones y métodos
             "@typescript-eslint/explicit-module-boundary-types": "error",
 
-            // Documentación obligatoria para todas las declaraciones
+            // Documentación obligatoria
             "@typescript-eslint/require-jsdoc": ["error", {
                 "require": {
                     "FunctionDeclaration": true,
@@ -44,26 +45,38 @@ export default [
                 }
             }],
 
-            // Regla específica para Vue
+            // Reglas Vue
             "vue/component-api-style": ["error", ["script-setup"]],
             "vue/require-explicit-emits": "error",
             "vue/require-prop-types": "error",
 
-            // Otras reglas (se mantienen igual)
+            // Control de calidad
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-unused-vars": ["error", {
                 "argsIgnorePattern": "^_",
                 "varsIgnorePattern": "^_"
             }],
+
+            // Convenciones de nombres
             "@typescript-eslint/naming-convention": [
                 "error",
                 {
                     "selector": "variable",
-                    "format": ["camelCase", "UPPER_CASE"]
+                    "format": ["camelCase", "UPPER_CASE", "PascalCase"]
                 },
                 {
                     "selector": "function",
                     "format": ["camelCase"]
+                },
+                {
+                    "selector": "interface",
+                    "format": ["PascalCase"],
+                    "prefix": ["I"]
+                },
+                {
+                    "selector": "typeAlias",
+                    "format": ["PascalCase"],
+                    "prefix": ["T"]
                 }
             ]
         }
