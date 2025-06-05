@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="actualizar reglas 1">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="exijo documentacion en ingles - reglas">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -132,23 +132,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="10504000" />
-    </task>
-    <task id="LOCAL-00158" summary="retorno a archivo inicial funcional - prueba 3">
-      <option name="closed" value="true" />
-      <created>1746798531154</created>
-      <option name="number" value="00158" />
-      <option name="presentableId" value="LOCAL-00158" />
-      <option name="project" value="LOCAL" />
-      <updated>1746798531154</updated>
-    </task>
-    <task id="LOCAL-00159" summary="retorno a archivo inicial funcional - prueba 4">
-      <option name="closed" value="true" />
-      <created>1746803697518</created>
-      <option name="number" value="00159" />
-      <option name="presentableId" value="LOCAL-00159" />
-      <option name="project" value="LOCAL" />
-      <updated>1746803697518</updated>
+      <workItem from="1749053910456" duration="13007000" />
     </task>
     <task id="LOCAL-00160" summary="retorno a archivo inicial funcional - prueba 4">
       <option name="closed" value="true" />
@@ -526,7 +510,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749071053544</updated>
     </task>
-    <option name="localTasksCounter" value="207" />
+    <task id="LOCAL-00207" summary="prueba con 1 archivo real">
+      <option name="closed" value="true" />
+      <created>1749074077573</created>
+      <option name="number" value="00207" />
+      <option name="presentableId" value="LOCAL-00207" />
+      <option name="project" value="LOCAL" />
+      <updated>1749074077573</updated>
+    </task>
+    <task id="LOCAL-00208" summary="exijo documentacion en ingles - reglas">
+      <option name="closed" value="true" />
+      <created>1749074299592</created>
+      <option name="number" value="00208" />
+      <option name="presentableId" value="LOCAL-00208" />
+      <option name="project" value="LOCAL" />
+      <updated>1749074299592</updated>
+    </task>
+    <option name="localTasksCounter" value="209" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,8 +544,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x10 - prueba 1" />
-    <MESSAGE value="optimización del script x10 - prueba 2" />
     <MESSAGE value="optimización del script x11 - prueba" />
     <MESSAGE value="optimización del script x11 - prueba 1" />
     <MESSAGE value="optimización del script x12 - prueba" />
@@ -569,6 +567,8 @@
     <MESSAGE value="rename rules" />
     <MESSAGE value="rename rules 1" />
     <MESSAGE value="actualizar reglas 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="actualizar reglas 1" />
+    <MESSAGE value="prueba con 1 archivo real" />
+    <MESSAGE value="exijo documentacion en ingles - reglas" />
+    <option name="LAST_COMMIT_MESSAGE" value="exijo documentacion en ingles - reglas" />
   </component>
 </project>
