@@ -19,11 +19,6 @@ interface GameProps {
  */
 const props = defineProps<GameProps>();
 
-
-
-
-
-
 const emit = defineEmits<{
     (event: 'play', gameId: number): void;
     (event: 'favorite', gameId: number): void;
