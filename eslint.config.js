@@ -29,10 +29,21 @@ export default [
                 "require": {
                     "FunctionDeclaration": true,
                     "MethodDefinition": true,
-                    "PropertyDefinition": true,
                     "ClassDeclaration": true,
-                    "ArrowFunctionExpression": true
-                }
+                    "ArrowFunctionExpression": true,
+                    "FunctionExpression": true,
+                    "ClassExpression": true
+                },
+                "contexts": [
+                    "TSInterfaceDeclaration",
+                    "TSTypeAliasDeclaration",
+                    "TSPropertySignature",
+                    "TSMethodSignature",
+                    "ClassProperty"
+                ]
+            }],
+            "jsdoc/require-description": ["error", {
+                "contexts": ["any"]
             }],
             "jsdoc/check-param-names": "error",
             "jsdoc/check-tag-names": "error",
