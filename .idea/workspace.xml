@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="nuevo archivo (sin una constante)">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba sin tsdoc">
       <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -132,23 +132,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="13342000" />
-    </task>
-    <task id="LOCAL-00162" summary="optimización del script x1 - Prueba 1">
-      <option name="closed" value="true" />
-      <created>1746806214855</created>
-      <option name="number" value="00162" />
-      <option name="presentableId" value="LOCAL-00162" />
-      <option name="project" value="LOCAL" />
-      <updated>1746806214855</updated>
-    </task>
-    <task id="LOCAL-00163" summary="optimización del script x1 - Prueba 2">
-      <option name="closed" value="true" />
-      <created>1746806250280</created>
-      <option name="number" value="00163" />
-      <option name="presentableId" value="LOCAL-00163" />
-      <option name="project" value="LOCAL" />
-      <updated>1746806250280</updated>
+      <workItem from="1749053910456" duration="13828000" />
     </task>
     <task id="LOCAL-00164" summary="optimización del script x2 -">
       <option name="closed" value="true" />
@@ -526,7 +510,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749136472532</updated>
     </task>
-    <option name="localTasksCounter" value="211" />
+    <task id="LOCAL-00211" summary="actualizo reglas">
+      <option name="closed" value="true" />
+      <created>1749136847858</created>
+      <option name="number" value="00211" />
+      <option name="presentableId" value="LOCAL-00211" />
+      <option name="project" value="LOCAL" />
+      <updated>1749136847858</updated>
+    </task>
+    <task id="LOCAL-00212" summary="prueba sin tsdoc">
+      <option name="closed" value="true" />
+      <created>1749136903786</created>
+      <option name="number" value="00212" />
+      <option name="presentableId" value="LOCAL-00212" />
+      <option name="project" value="LOCAL" />
+      <updated>1749136903786</updated>
+    </task>
+    <option name="localTasksCounter" value="213" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,8 +544,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x12 - prueba" />
-    <MESSAGE value="optimización del script x12 - prueba 1" />
     <MESSAGE value="optimización del script x12 - prueba 2" />
     <MESSAGE value="optimización del script x13 - prueba" />
     <MESSAGE value="optimización del script x14 - prueba" />
@@ -569,6 +567,8 @@
     <MESSAGE value="exijo documentacion en ingles - reglas" />
     <MESSAGE value="nuevo archivo" />
     <MESSAGE value="nuevo archivo (sin una constante)" />
-    <option name="LAST_COMMIT_MESSAGE" value="nuevo archivo (sin una constante)" />
+    <MESSAGE value="actualizo reglas" />
+    <MESSAGE value="prueba sin tsdoc" />
+    <option name="LAST_COMMIT_MESSAGE" value="prueba sin tsdoc" />
   </component>
 </project>

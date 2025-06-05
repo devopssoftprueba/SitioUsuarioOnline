@@ -9,7 +9,9 @@ export default [
             parser: typescriptParser,
             parserOptions: {
                 ecmaVersion: "latest",
-                sourceType: "module"
+                sourceType: "module",
+                extraFileExtensions: [".vue"], // Importante para archivos Vue
+                parser: "vue-eslint-parser"    // Parser específico para Vue
             }
         },
         plugins: {
@@ -18,7 +20,7 @@ export default [
         },
         rules: {
             // Documentación obligatoria
-            "tsdoc/syntax": "error",
+            "tsdoc/syntax": "warn",
             "@typescript-eslint/explicit-function-return-type": ["error", {
                 "allowExpressions": false,
                 "allowTypedFunctionExpressions": false
@@ -30,7 +32,7 @@ export default [
             // Forzar documentación en funciones y métodos
             "@typescript-eslint/explicit-module-boundary-types": "error",
 
-            // Nueva regla para exigir documentación en todas las declaraciones
+            // Documentación obligatoria para todas las declaraciones
             "@typescript-eslint/require-jsdoc": ["error", {
                 "require": {
                     "FunctionDeclaration": true,
@@ -42,7 +44,12 @@ export default [
                 }
             }],
 
-            // Otras reglas estrictas (se mantienen igual)
+            // Regla específica para Vue
+            "vue/component-api-style": ["error", ["script-setup"]],
+            "vue/require-explicit-emits": "error",
+            "vue/require-prop-types": "error",
+
+            // Otras reglas (se mantienen igual)
             "@typescript-eslint/no-explicit-any": "error",
             "@typescript-eslint/no-unused-vars": ["error", {
                 "argsIgnorePattern": "^_",
