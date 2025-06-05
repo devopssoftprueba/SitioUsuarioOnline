@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba sin tsdoc en .vue">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="actualizacion nuevas reglas para reconocer todas las extenciones">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -132,23 +132,7 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="15177000" />
-    </task>
-    <task id="LOCAL-00166" summary="optimización del script x3 -">
-      <option name="closed" value="true" />
-      <created>1746812085174</created>
-      <option name="number" value="00166" />
-      <option name="presentableId" value="LOCAL-00166" />
-      <option name="project" value="LOCAL" />
-      <updated>1746812085174</updated>
-    </task>
-    <task id="LOCAL-00167" summary="optimización del script x3 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746812116862</created>
-      <option name="number" value="00167" />
-      <option name="presentableId" value="LOCAL-00167" />
-      <option name="project" value="LOCAL" />
-      <updated>1746812116862</updated>
+      <workItem from="1749053910456" duration="16105000" />
     </task>
     <task id="LOCAL-00168" summary="optimización del script x4 -">
       <option name="closed" value="true" />
@@ -526,7 +510,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749137740147</updated>
     </task>
-    <option name="localTasksCounter" value="215" />
+    <task id="LOCAL-00215" summary="actualizacion nuevos archivos">
+      <option name="closed" value="true" />
+      <created>1749139138424</created>
+      <option name="number" value="00215" />
+      <option name="presentableId" value="LOCAL-00215" />
+      <option name="project" value="LOCAL" />
+      <updated>1749139138426</updated>
+    </task>
+    <task id="LOCAL-00216" summary="actualizacion nuevas reglas para reconocer todas las extenciones">
+      <option name="closed" value="true" />
+      <created>1749139469326</created>
+      <option name="number" value="00216" />
+      <option name="presentableId" value="LOCAL-00216" />
+      <option name="project" value="LOCAL" />
+      <updated>1749139469326</updated>
+    </task>
+    <option name="localTasksCounter" value="217" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,8 +544,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x14 - prueba" />
-    <MESSAGE value="optimización del script x14 - prueba 1" />
     <MESSAGE value="optimización del script x14 - prueba 2" />
     <MESSAGE value="optimización del script x15 -" />
     <MESSAGE value="optimización del script x15 - prueba 1" />
@@ -569,6 +567,8 @@
     <MESSAGE value="prueba sin tsdoc" />
     <MESSAGE value="actualizar dependencias" />
     <MESSAGE value="prueba sin tsdoc en .vue" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba sin tsdoc en .vue" />
+    <MESSAGE value="actualizacion nuevos archivos" />
+    <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones" />
+    <option name="LAST_COMMIT_MESSAGE" value="actualizacion nuevas reglas para reconocer todas las extenciones" />
   </component>
 </project>
