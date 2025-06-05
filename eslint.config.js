@@ -55,9 +55,46 @@ export default [
             "vue/component-api-style": ["error", ["script-setup"]],
             "vue/require-explicit-emits": "error",
             "vue/require-prop-types": "error",
-            "vue/script-setup-uses-vars": "error",
 
-            // [Resto de reglas igual...]
+            // Tipos explícitos
+            "@typescript-eslint/explicit-function-return-type": ["error", {
+                "allowExpressions": false,
+                "allowTypedFunctionExpressions": false
+            }],
+            "@typescript-eslint/explicit-member-accessibility": ["error", {
+                "accessibility": "explicit"
+            }],
+            "@typescript-eslint/explicit-module-boundary-types": "error",
+
+            // Control de calidad
+            "@typescript-eslint/no-explicit-any": "error",
+            "@typescript-eslint/no-unused-vars": ["error", {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_"
+            }],
+
+            // Convenciones de nombres
+            "@typescript-eslint/naming-convention": [
+                "error",
+                {
+                    "selector": "variable",
+                    "format": ["camelCase", "UPPER_CASE", "PascalCase"]
+                },
+                {
+                    "selector": "function",
+                    "format": ["camelCase"]
+                },
+                {
+                    "selector": "interface",
+                    "format": ["PascalCase"],
+                    "prefix": ["I"]
+                },
+                {
+                    "selector": "typeAlias",
+                    "format": ["PascalCase"],
+                    "prefix": ["T"]
+                }
+            ]
         }
     }
 ];
