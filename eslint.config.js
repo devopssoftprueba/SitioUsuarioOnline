@@ -45,12 +45,21 @@ export default [
                 ]
             }],
             "jsdoc/require-description": ["error", {
-                "contexts": ["any"]
+                "contexts": ["any"],
+                "descriptionStyle": "body",
+                "checkDescription": {
+                    "descriptionPattern": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$",
+                    "message": "Documentation must be in English and start with a capital letter"
+                }
             }],
             "jsdoc/check-param-names": "error",
-            "jsdoc/check-tag-names": "error",
+            "jsdoc/check-tag-names": ["error", {
+                "definedTags": ["param", "returns", "type", "property", "description"]
+            }],
             "jsdoc/check-types": "error",
+            "jsdoc/valid-types": "error",
 
+            // [Resto de las reglas se mantienen igual...]
             // Reglas Vue
             "vue/component-api-style": ["error", ["script-setup"]],
             "vue/require-explicit-emits": "error",

@@ -4,8 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba 2 (debe fallar)">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba fail">
+      <change afterPath="$PROJECT_DIR$/webix.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gamecard.vue" beforeDir="false" afterPath="$PROJECT_DIR$/gamecard.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,8 +81,10 @@
     &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;22.12.0&quot;,
     &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;22.12.0&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.stylelint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.stylelint&quot;: &quot;C:\\Users\\Ronald\\PhpstormProjects\\SitioUsuarioOnline\\node_modules\\stylelint&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Ronald\\AppData\\Local\\JetBrains\\PhpStorm 2024.3\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
@@ -132,47 +139,11 @@
       <workItem from="1746473934034" duration="84497000" />
       <workItem from="1747262487675" duration="1251000" />
       <workItem from="1748383873718" duration="2183000" />
-      <workItem from="1749053910456" duration="18427000" />
-    </task>
-    <task id="LOCAL-00173" summary="optimización del script x6 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746813416253</created>
-      <option name="number" value="00173" />
-      <option name="presentableId" value="LOCAL-00173" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813416253</updated>
-    </task>
-    <task id="LOCAL-00174" summary="optimización del script x7 - prueba">
-      <option name="closed" value="true" />
-      <created>1746813672036</created>
-      <option name="number" value="00174" />
-      <option name="presentableId" value="LOCAL-00174" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813672036</updated>
-    </task>
-    <task id="LOCAL-00175" summary="optimización del script x8 -">
-      <option name="closed" value="true" />
-      <created>1746813877538</created>
-      <option name="number" value="00175" />
-      <option name="presentableId" value="LOCAL-00175" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813877538</updated>
-    </task>
-    <task id="LOCAL-00176" summary="optimización del script x8 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746813902822</created>
-      <option name="number" value="00176" />
-      <option name="presentableId" value="LOCAL-00176" />
-      <option name="project" value="LOCAL" />
-      <updated>1746813902822</updated>
-    </task>
-    <task id="LOCAL-00177" summary="optimización del script x9 - prueba">
-      <option name="closed" value="true" />
-      <created>1746821988428</created>
-      <option name="number" value="00177" />
-      <option name="presentableId" value="LOCAL-00177" />
-      <option name="project" value="LOCAL" />
-      <updated>1746821988428</updated>
+      <workItem from="1749053910456" duration="23306000" />
+      <workItem from="1749506265856" duration="852000" />
+      <workItem from="1750081772286" duration="5000" />
+      <workItem from="1750192853675" duration="11603000" />
+      <workItem from="1750339999712" duration="6262000" />
     </task>
     <task id="LOCAL-00178" summary="optimización del script x9 - prueba 1">
       <option name="closed" value="true" />
@@ -526,7 +497,47 @@
       <option name="project" value="LOCAL" />
       <updated>1749140581955</updated>
     </task>
-    <option name="localTasksCounter" value="222" />
+    <task id="LOCAL-00222" summary="actualizo reglas">
+      <option name="closed" value="true" />
+      <created>1749144730165</created>
+      <option name="number" value="00222" />
+      <option name="presentableId" value="LOCAL-00222" />
+      <option name="project" value="LOCAL" />
+      <updated>1749144730165</updated>
+    </task>
+    <task id="LOCAL-00223" summary="pruena (debe fallar )">
+      <option name="closed" value="true" />
+      <created>1749144756911</created>
+      <option name="number" value="00223" />
+      <option name="presentableId" value="LOCAL-00223" />
+      <option name="project" value="LOCAL" />
+      <updated>1749144756911</updated>
+    </task>
+    <task id="LOCAL-00224" summary="actualizo reglas y prueba de fallo">
+      <option name="closed" value="true" />
+      <created>1749144874809</created>
+      <option name="number" value="00224" />
+      <option name="presentableId" value="LOCAL-00224" />
+      <option name="project" value="LOCAL" />
+      <updated>1749144874809</updated>
+    </task>
+    <task id="LOCAL-00225" summary="corregir reglas y prueba de fallo">
+      <option name="closed" value="true" />
+      <created>1749144985081</created>
+      <option name="number" value="00225" />
+      <option name="presentableId" value="LOCAL-00225" />
+      <option name="project" value="LOCAL" />
+      <updated>1749144985081</updated>
+    </task>
+    <task id="LOCAL-00226" summary="prueba fail">
+      <option name="closed" value="true" />
+      <created>1749145013757</created>
+      <option name="number" value="00226" />
+      <option name="presentableId" value="LOCAL-00226" />
+      <option name="project" value="LOCAL" />
+      <updated>1749145013757</updated>
+    </task>
+    <option name="localTasksCounter" value="227" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,10 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="optimización del script x15 - esta es la definitiva, hago push despues de correcto funcionamiento total" />
-    <MESSAGE value="actualizacion completa" />
-    <MESSAGE value="modifico ruta de reglas" />
-    <MESSAGE value="modifico ruta de reglas 1" />
     <MESSAGE value="modifico ruta de reglas 2" />
     <MESSAGE value="modifico ruta de reglas 3" />
     <MESSAGE value="modifico ruta de reglas 4" />
@@ -558,7 +565,6 @@
     <MESSAGE value="exijo documentacion en ingles - reglas" />
     <MESSAGE value="nuevo archivo" />
     <MESSAGE value="nuevo archivo (sin una constante)" />
-    <MESSAGE value="actualizo reglas" />
     <MESSAGE value="prueba sin tsdoc" />
     <MESSAGE value="actualizar dependencias" />
     <MESSAGE value="prueba sin tsdoc en .vue" />
@@ -569,6 +575,11 @@
     <MESSAGE value="prueba 1 (debe fallar 1)" />
     <MESSAGE value="solucion errores con .js" />
     <MESSAGE value="prueba 2 (debe fallar)" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba 2 (debe fallar)" />
+    <MESSAGE value="actualizo reglas" />
+    <MESSAGE value="pruena (debe fallar )" />
+    <MESSAGE value="actualizo reglas y prueba de fallo" />
+    <MESSAGE value="corregir reglas y prueba de fallo" />
+    <MESSAGE value="prueba fail" />
+    <option name="LAST_COMMIT_MESSAGE" value="prueba fail" />
   </component>
 </project>
