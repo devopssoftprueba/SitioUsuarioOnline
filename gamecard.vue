@@ -39,9 +39,7 @@ const isSelected = ref<boolean>(false);
 /** Computed property for uppercase game name */
 const upperName = computed((): string => props.name.toUpperCase());
 
-/**
- * Handles the play button click event
- */
+
 function handlePlay(): void {
   emit('play', props.id);
 }
