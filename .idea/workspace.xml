@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba fail">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="cambios con documentación en ingles y plantilla establecida">
       <change afterPath="$PROJECT_DIR$/webix.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
@@ -143,7 +143,7 @@
       <workItem from="1749506265856" duration="852000" />
       <workItem from="1750081772286" duration="5000" />
       <workItem from="1750192853675" duration="11603000" />
-      <workItem from="1750339999712" duration="6262000" />
+      <workItem from="1750339999712" duration="6584000" />
     </task>
     <task id="LOCAL-00178" summary="optimización del script x9 - prueba 1">
       <option name="closed" value="true" />
@@ -555,7 +555,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="modifico ruta de reglas 2" />
     <MESSAGE value="modifico ruta de reglas 3" />
     <MESSAGE value="modifico ruta de reglas 4" />
     <MESSAGE value="rename rules" />
@@ -580,6 +579,7 @@
     <MESSAGE value="actualizo reglas y prueba de fallo" />
     <MESSAGE value="corregir reglas y prueba de fallo" />
     <MESSAGE value="prueba fail" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba fail" />
+    <MESSAGE value="cambios con documentación en ingles y plantilla establecida" />
+    <option name="LAST_COMMIT_MESSAGE" value="cambios con documentación en ingles y plantilla establecida" />
   </component>
 </project>
