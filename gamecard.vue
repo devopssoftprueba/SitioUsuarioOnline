@@ -56,7 +56,7 @@ function handlePlay(): void {
 
 
 /**
- * documentacion en español.
+ * Handles the favorite action.
  */
 function handleFavorite(): void {
   emit('favorite', props.id);
