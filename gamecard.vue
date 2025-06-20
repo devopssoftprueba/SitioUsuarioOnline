@@ -33,6 +33,7 @@ const emit = defineEmits<{
   (e: 'favorite', gameId: number): void;
 }>();
 
+
 /** Tracks the selected state of the card */
 const isSelected = ref<boolean>(false);
 
