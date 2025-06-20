@@ -47,10 +47,17 @@ const isSelected = ref<boolean>(false);
 const upperName = computed((): string => props.name.toUpperCase());
 
 
+/**
+ * Handles the play action.
+ */
 function handlePlay(): void {
   emit('play', props.id);
 }
 
+
+/**
+ * Handles the favorite action.
+ */
 function handleFavorite(): void {
   emit('favorite', props.id);
 }
