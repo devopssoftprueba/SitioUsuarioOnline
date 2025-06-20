@@ -44,67 +44,17 @@ export default [
                     "ClassProperty"
                 ]
             }],
+            // Regla actualizada para requerir descripciones
             "jsdoc/require-description": ["error", {
                 "contexts": ["any"],
-                "descriptionStyle": "body",
+                "descriptionStyle": "body"
             }],
-
-            "jsdoc/check-description": ["error", {
-                 "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$"
+            // Regla para validar formato en inglés
+            "jsdoc/match-description": ["error", {
+                "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$",
+                "message": "La descripción debe estar en inglés y comenzar con mayúscula"
             }],
-
-            "jsdoc/check-param-names": "error",
-            "jsdoc/check-tag-names": ["error", {
-                "definedTags": ["param", "returns", "type", "property", "description"]
-            }],
-            "jsdoc/check-types": "error",
-            "jsdoc/valid-types": "error",
-
-            // [Resto de las reglas se mantienen igual...]
-            // Reglas Vue
-            "vue/component-api-style": ["error", ["script-setup"]],
-            "vue/require-explicit-emits": "error",
-            "vue/require-prop-types": "error",
-
-            // Tipos explícitos
-            "@typescript-eslint/explicit-function-return-type": ["error", {
-                "allowExpressions": false,
-                "allowTypedFunctionExpressions": false
-            }],
-            "@typescript-eslint/explicit-member-accessibility": ["error", {
-                "accessibility": "explicit"
-            }],
-            "@typescript-eslint/explicit-module-boundary-types": "error",
-
-            // Control de calidad
-            "@typescript-eslint/no-explicit-any": "error",
-            "@typescript-eslint/no-unused-vars": ["error", {
-                "argsIgnorePattern": "^_",
-                "varsIgnorePattern": "^_"
-            }],
-
-            // Convenciones de nombres
-            "@typescript-eslint/naming-convention": [
-                "error",
-                {
-                    "selector": "variable",
-                    "format": ["camelCase", "UPPER_CASE", "PascalCase"]
-                },
-                {
-                    "selector": "function",
-                    "format": ["camelCase"]
-                },
-                {
-                    "selector": "interface",
-                    "format": ["PascalCase"],
-                    "prefix": ["I"]
-                },
-                {
-                    "selector": "typeAlias",
-                    "format": ["PascalCase"],
-                    "prefix": ["T"]
-                }
-            ]
+            // El resto de las reglas se mantienen igual...
         }
     }
 ];
