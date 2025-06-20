@@ -24,6 +24,10 @@ interface IGameProps {
 
 
 
+
+
+
+
 /** Component props definition */
 const props = defineProps<IGameProps>();
 
