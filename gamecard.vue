@@ -46,9 +46,6 @@ function handlePlay(): void {
   emit('play', props.id);
 }
 
-/**
- * Handles the favorite button click event
- */
 function handleFavorite(): void {
   emit('favorite', props.id);
 }

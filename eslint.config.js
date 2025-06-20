@@ -47,11 +47,12 @@ export default [
             "jsdoc/require-description": ["error", {
                 "contexts": ["any"],
                 "descriptionStyle": "body",
-                "checkDescription": {
-                    "descriptionPattern": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$",
-                    "message": "Documentation must be in English and start with a capital letter"
-                }
             }],
+
+            "jsdoc/check-description": ["error", {
+                 "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$"
+            }],
+
             "jsdoc/check-param-names": "error",
             "jsdoc/check-tag-names": ["error", {
                 "definedTags": ["param", "returns", "type", "property", "description"]
