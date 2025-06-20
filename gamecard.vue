@@ -22,6 +22,8 @@ interface IGameProps {
   isFavorite: boolean;
 }
 
+
+
 /** Component props definition */
 const props = defineProps<IGameProps>();
 
