@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba error en documentación">
-      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
-    </list>
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba error en documentación (2)" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -138,23 +136,7 @@
       <workItem from="1749506265856" duration="852000" />
       <workItem from="1750081772286" duration="5000" />
       <workItem from="1750192853675" duration="11603000" />
-      <workItem from="1750339999712" duration="7301000" />
-    </task>
-    <task id="LOCAL-00181" summary="optimización del script x10 - prueba 2">
-      <option name="closed" value="true" />
-      <created>1746823772393</created>
-      <option name="number" value="00181" />
-      <option name="presentableId" value="LOCAL-00181" />
-      <option name="project" value="LOCAL" />
-      <updated>1746823772393</updated>
-    </task>
-    <task id="LOCAL-00182" summary="optimización del script x11 - prueba">
-      <option name="closed" value="true" />
-      <created>1746824085622</created>
-      <option name="number" value="00182" />
-      <option name="presentableId" value="LOCAL-00182" />
-      <option name="project" value="LOCAL" />
-      <updated>1746824085622</updated>
+      <workItem from="1750339999712" duration="7637000" />
     </task>
     <task id="LOCAL-00183" summary="optimización del script x11 - prueba 1">
       <option name="closed" value="true" />
@@ -532,7 +514,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750434091617</updated>
     </task>
-    <option name="localTasksCounter" value="230" />
+    <task id="LOCAL-00230" summary="prueba error en documentación (1)">
+      <option name="closed" value="true" />
+      <created>1750434448263</created>
+      <option name="number" value="00230" />
+      <option name="presentableId" value="LOCAL-00230" />
+      <option name="project" value="LOCAL" />
+      <updated>1750434448263</updated>
+    </task>
+    <task id="LOCAL-00231" summary="prueba error en documentación (2)">
+      <option name="closed" value="true" />
+      <created>1750434475735</created>
+      <option name="number" value="00231" />
+      <option name="presentableId" value="LOCAL-00231" />
+      <option name="project" value="LOCAL" />
+      <updated>1750434475735</updated>
+    </task>
+    <option name="localTasksCounter" value="232" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -550,8 +548,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="rename rules" />
-    <MESSAGE value="rename rules 1" />
     <MESSAGE value="actualizar reglas 1" />
     <MESSAGE value="prueba con 1 archivo real" />
     <MESSAGE value="exijo documentacion en ingles - reglas" />
@@ -575,6 +571,8 @@
     <MESSAGE value="cambios con documentación en ingles y plantilla establecida" />
     <MESSAGE value="cambios con documentación en ingles y plantilla establecida x2" />
     <MESSAGE value="prueba error en documentación" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba error en documentación" />
+    <MESSAGE value="prueba error en documentación (1)" />
+    <MESSAGE value="prueba error en documentación (2)" />
+    <option name="LAST_COMMIT_MESSAGE" value="prueba error en documentación (2)" />
   </component>
 </project>

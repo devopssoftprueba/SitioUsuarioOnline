@@ -5,7 +5,7 @@
   "main": "index.ts",
   "type": "module",
   "scripts": {
-    "lint:docs": "eslint --max-warnings 0 --ext .ts,.tsx,.vue . --rule 'tsdoc/syntax: error' --rule '@typescript-eslint/no-unused-vars: off' --rule '@typescript-eslint/no-explicit-any: off'",
+    "lint:docs": "eslint --max-warnings 0 --ext .ts,.tsx,.vue . --rule 'tsdoc/syntax: error' --rule 'jsdoc/require-jsdoc: error' --rule 'jsdoc/require-description: error' --rule 'jsdoc/match-description: error' --rule '@typescript-eslint/no-unused-vars: off' --rule '@typescript-eslint/no-explicit-any: off'",
     "lint:docs:fix": "eslint --max-warnings 0 --ext .ts,.tsx,.vue . --rule 'tsdoc/syntax: error' --rule 'jsdoc/*: error' --fix"
   },
   "keywords": [],
