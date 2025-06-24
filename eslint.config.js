@@ -62,15 +62,17 @@ export default [
             "tsdoc/syntax": "off"
         }
     },
-    // Opcional: sección explícita para archivos JS (puedes dejarla si quieres reglas extra)
+    // reglas solo para archivos js
     {
         files: ["**/*.js"],
         plugins: {
             "jsdoc": jsdoc
         },
         rules: {
+            "tsdoc/syntax": "off",
             "jsdoc/check-tag-names": "error",
             "jsdoc/check-types": "error",
+            "jsdoc/require-property": "error", // Esta regla valida @property
             "jsdoc/require-param": "warn",
             "jsdoc/require-returns": "warn"
         }
