@@ -34,12 +34,7 @@ const userTable = {
     }
 };
 
-/**
- * Vista de formulario para agregar/editar usuarios.
- * @type {object}
- * @property {string} id - Identificador del formulario.
- * @property {Array} elements - Elementos del formulario.
- */
+
 const userForm = {
     view: "form",
     id: "userForm",
