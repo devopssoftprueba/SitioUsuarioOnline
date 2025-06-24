@@ -44,17 +44,35 @@ export default [
                     "ClassProperty"
                 ]
             }],
-            // Regla actualizada para requerir descripciones
             "jsdoc/require-description": ["error", {
                 "contexts": ["any"],
                 "descriptionStyle": "body"
             }],
-            // Regla para validar formato en inglés
             "jsdoc/match-description": ["error", {
                 "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$",
                 "message": "La descripción debe estar en inglés y comenzar con mayúscula"
             }],
             // El resto de las reglas se mantienen igual...
+        }
+    },
+    // Desactiva TSDoc solo en archivos JS, manteniendo tus reglas JSDoc
+    {
+        files: ["**/*.js"],
+        rules: {
+            "tsdoc/syntax": "off"
+        }
+    },
+    // Opcional: sección explícita para archivos JS (puedes dejarla si quieres reglas extra)
+    {
+        files: ["**/*.js"],
+        plugins: {
+            "jsdoc": jsdoc
+        },
+        rules: {
+            "jsdoc/check-tag-names": "error",
+            "jsdoc/check-types": "error",
+            "jsdoc/require-param": "warn",
+            "jsdoc/require-returns": "warn"
         }
     }
 ];

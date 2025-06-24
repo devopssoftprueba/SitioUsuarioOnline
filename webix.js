@@ -1,31 +1,17 @@
 /**
  * Archivo de configuración principal para la vista de usuarios en Webix.
- * @author Ronald Pelaez
- * @date 2024-06-10
- * @view datatable
- * @notes Incluye importaciones, vistas, propiedades, eventos y métodos.
+ * Incluye importaciones, vistas, propiedades, eventos y métodos.
  */
 
-/**
- * Importa la librería principal de Webix.
- * @import webix
- */
 import webix from "webix";
-
-/**
- * Importa utilidades personalizadas.
- * @import utils
- */
 import { fetchUsers, saveUser } from "./utils";
 
 /**
  * Configuración de la vista principal de usuarios.
- * @view datatable
- * @property {string} id Identificador único de la tabla.
- * @property {array} columns Columnas de la tabla.
- * @property {array} data Datos iniciales de la tabla.
- * @event {function} onItemClick Evento al hacer clic en un elemento.
- * @method {function} reloadUsers Recarga los datos de usuarios.
+ * @type object
+ * @property string id - Identificador único de la tabla.
+ * @property Array columns - Columnas de la tabla.
+ * @property Array data - Datos iniciales de la tabla.
  */
 const userTable = {
     view: "datatable",
@@ -36,13 +22,12 @@ const userTable = {
         { id: "email", header: "Correo", width: 200 }
     ],
     data: [],
-    /**
-     * Evento que se dispara al hacer clic en una fila.
-     * @event onItemClick
-     * @param {string} id ID del elemento clickeado.
-     * @param {object} e Evento de clic.
-     */
     on: {
+        /**
+         * Evento que se dispara al hacer clic en una fila.
+         * @param {string} id - ID del elemento clickeado.
+         * @param {object} e - Evento de clic.
+         */
         onItemClick: function(id, e) {
             showUserDetails(id);
         }
@@ -51,10 +36,9 @@ const userTable = {
 
 /**
  * Vista de formulario para agregar/editar usuarios.
- * @view form
- * @property {string} id Identificador del formulario.
- * @property {array} elements Elementos del formulario.
- * @event {function} onSubmit Evento al enviar el formulario.
+ * @type {object}
+ * @property {string} id - Identificador del formulario.
+ * @property {Array} elements - Elementos del formulario.
  */
 const userForm = {
     view: "form",
@@ -67,17 +51,15 @@ const userForm = {
 };
 
 /**
- * Metodo para mostrar los detalles de un usuario.
- * @method showUserDetails
- * @param {string} userId ID del usuario a mostrar.
+ * Muestra los detalles de un usuario.
+ * @param {string} userId - ID del usuario a mostrar.
  */
 function showUserDetails(userId) {
     // Lógica para mostrar detalles
 }
 
 /**
- * Metodo para guardar el formulario de usuario.
- * @method saveForm
+ * Guarda el formulario de usuario.
  * @returns {void}
  */
 function saveForm() {
@@ -86,13 +68,7 @@ function saveForm() {
 }
 
 /**
- * Metodo para recargar los datos de usuarios en la tabla.
- * @method reloadUsers
- *
- *
- *
- *
- *
+ * Recarga los datos de usuarios en la tabla.
  * @returns {Promise<void>}
  */
 async function reloadUsers() {
@@ -102,8 +78,7 @@ async function reloadUsers() {
 }
 
 /**
- * Inicialización de la interfaz principal.
- * @method init
+ * Inicializa la interfaz principal.
  * @returns {void}
  */
 function init() {
