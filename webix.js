@@ -47,10 +47,7 @@ const userForm = {
 
 
 
-/**
- * Muestra los detalles de un usuario.
- * @param {string} userId - ID del usuario a mostrar.
- */
+
 function showUserDetails(userId) {
     // Lógica para mostrar detalles
 }
