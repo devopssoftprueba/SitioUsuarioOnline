@@ -7,7 +7,7 @@ import vue from 'eslint-plugin-vue';
 
 export default [
     {
-        files: ["**/*.ts", "**/*.tsx", "**/*.vue"],
+        files: ["**/*.ts", "**/*.tsx", "**/*.vue", "**/*.js"],
         languageOptions: {
             parser: vueParser,
             parserOptions: {

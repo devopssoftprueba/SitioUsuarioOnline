@@ -88,6 +88,7 @@ function saveForm() {
 /**
  * Metodo para recargar los datos de usuarios en la tabla.
  * @method reloadUsers
+ *
  * @returns {Promise<void>}
  */
 async function reloadUsers() {

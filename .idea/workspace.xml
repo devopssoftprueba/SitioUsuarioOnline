@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba error en documentación (2)" />
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba anterior funcionó bien, se corrige">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -136,63 +138,8 @@
       <workItem from="1749506265856" duration="852000" />
       <workItem from="1750081772286" duration="5000" />
       <workItem from="1750192853675" duration="11603000" />
-      <workItem from="1750339999712" duration="7637000" />
-    </task>
-    <task id="LOCAL-00183" summary="optimización del script x11 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746824112396</created>
-      <option name="number" value="00183" />
-      <option name="presentableId" value="LOCAL-00183" />
-      <option name="project" value="LOCAL" />
-      <updated>1746824112396</updated>
-    </task>
-    <task id="LOCAL-00184" summary="optimización del script x12 - prueba">
-      <option name="closed" value="true" />
-      <created>1746824310837</created>
-      <option name="number" value="00184" />
-      <option name="presentableId" value="LOCAL-00184" />
-      <option name="project" value="LOCAL" />
-      <updated>1746824310837</updated>
-    </task>
-    <task id="LOCAL-00185" summary="optimización del script x12 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746824330551</created>
-      <option name="number" value="00185" />
-      <option name="presentableId" value="LOCAL-00185" />
-      <option name="project" value="LOCAL" />
-      <updated>1746824330551</updated>
-    </task>
-    <task id="LOCAL-00186" summary="optimización del script x12 - prueba 2">
-      <option name="closed" value="true" />
-      <created>1746824395185</created>
-      <option name="number" value="00186" />
-      <option name="presentableId" value="LOCAL-00186" />
-      <option name="project" value="LOCAL" />
-      <updated>1746824395187</updated>
-    </task>
-    <task id="LOCAL-00187" summary="optimización del script x13 - prueba">
-      <option name="closed" value="true" />
-      <created>1746825098988</created>
-      <option name="number" value="00187" />
-      <option name="presentableId" value="LOCAL-00187" />
-      <option name="project" value="LOCAL" />
-      <updated>1746825098988</updated>
-    </task>
-    <task id="LOCAL-00188" summary="optimización del script x14 - prueba">
-      <option name="closed" value="true" />
-      <created>1746825580801</created>
-      <option name="number" value="00188" />
-      <option name="presentableId" value="LOCAL-00188" />
-      <option name="project" value="LOCAL" />
-      <updated>1746825580801</updated>
-    </task>
-    <task id="LOCAL-00189" summary="optimización del script x14 - prueba">
-      <option name="closed" value="true" />
-      <created>1746825848165</created>
-      <option name="number" value="00189" />
-      <option name="presentableId" value="LOCAL-00189" />
-      <option name="project" value="LOCAL" />
-      <updated>1746825848166</updated>
+      <workItem from="1750339999712" duration="14978000" />
+      <workItem from="1750793446575" duration="11000" />
     </task>
     <task id="LOCAL-00190" summary="optimización del script x14 - prueba">
       <option name="closed" value="true" />
@@ -530,7 +477,63 @@
       <option name="project" value="LOCAL" />
       <updated>1750434475735</updated>
     </task>
-    <option name="localTasksCounter" value="232" />
+    <task id="LOCAL-00232" summary="prueba error en documentación (3)">
+      <option name="closed" value="true" />
+      <created>1750434758883</created>
+      <option name="number" value="00232" />
+      <option name="presentableId" value="LOCAL-00232" />
+      <option name="project" value="LOCAL" />
+      <updated>1750434758883</updated>
+    </task>
+    <task id="LOCAL-00233" summary="prueba error en documentación (4)">
+      <option name="closed" value="true" />
+      <created>1750434907537</created>
+      <option name="number" value="00233" />
+      <option name="presentableId" value="LOCAL-00233" />
+      <option name="project" value="LOCAL" />
+      <updated>1750434907537</updated>
+    </task>
+    <task id="LOCAL-00234" summary="prueba error en documentación (5)">
+      <option name="closed" value="true" />
+      <created>1750434978068</created>
+      <option name="number" value="00234" />
+      <option name="presentableId" value="LOCAL-00234" />
+      <option name="project" value="LOCAL" />
+      <updated>1750434978068</updated>
+    </task>
+    <task id="LOCAL-00235" summary="prueba error en documentación (6)">
+      <option name="closed" value="true" />
+      <created>1750435138334</created>
+      <option name="number" value="00235" />
+      <option name="presentableId" value="LOCAL-00235" />
+      <option name="project" value="LOCAL" />
+      <updated>1750435138334</updated>
+    </task>
+    <task id="LOCAL-00236" summary="solucion errores de documentación">
+      <option name="closed" value="true" />
+      <created>1750435491667</created>
+      <option name="number" value="00236" />
+      <option name="presentableId" value="LOCAL-00236" />
+      <option name="project" value="LOCAL" />
+      <updated>1750435491667</updated>
+    </task>
+    <task id="LOCAL-00237" summary="prueba ingles">
+      <option name="closed" value="true" />
+      <created>1750457644459</created>
+      <option name="number" value="00237" />
+      <option name="presentableId" value="LOCAL-00237" />
+      <option name="project" value="LOCAL" />
+      <updated>1750457644459</updated>
+    </task>
+    <task id="LOCAL-00238" summary="prueba anterior funcionó bien, se corrige">
+      <option name="closed" value="true" />
+      <created>1750457680009</created>
+      <option name="number" value="00238" />
+      <option name="presentableId" value="LOCAL-00238" />
+      <option name="project" value="LOCAL" />
+      <updated>1750457680009</updated>
+    </task>
+    <option name="localTasksCounter" value="239" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -548,13 +551,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="actualizar reglas 1" />
-    <MESSAGE value="prueba con 1 archivo real" />
-    <MESSAGE value="exijo documentacion en ingles - reglas" />
-    <MESSAGE value="nuevo archivo" />
-    <MESSAGE value="nuevo archivo (sin una constante)" />
-    <MESSAGE value="prueba sin tsdoc" />
-    <MESSAGE value="actualizar dependencias" />
     <MESSAGE value="prueba sin tsdoc en .vue" />
     <MESSAGE value="actualizacion nuevos archivos" />
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones" />
@@ -573,6 +569,13 @@
     <MESSAGE value="prueba error en documentación" />
     <MESSAGE value="prueba error en documentación (1)" />
     <MESSAGE value="prueba error en documentación (2)" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba error en documentación (2)" />
+    <MESSAGE value="prueba error en documentación (3)" />
+    <MESSAGE value="prueba error en documentación (4)" />
+    <MESSAGE value="prueba error en documentación (5)" />
+    <MESSAGE value="prueba error en documentación (6)" />
+    <MESSAGE value="solucion errores de documentación" />
+    <MESSAGE value="prueba ingles" />
+    <MESSAGE value="prueba anterior funcionó bien, se corrige" />
+    <option name="LAST_COMMIT_MESSAGE" value="prueba anterior funcionó bien, se corrige" />
   </component>
 </project>
