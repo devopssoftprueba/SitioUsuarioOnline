@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba anterior funcionó bien, se corrige">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/webix.js" beforeDir="false" afterPath="$PROJECT_DIR$/webix.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -140,6 +141,7 @@
       <workItem from="1750192853675" duration="11603000" />
       <workItem from="1750339999712" duration="14978000" />
       <workItem from="1750793446575" duration="11000" />
+      <workItem from="1750853955086" duration="378000" />
     </task>
     <task id="LOCAL-00190" summary="optimización del script x14 - prueba">
       <option name="closed" value="true" />

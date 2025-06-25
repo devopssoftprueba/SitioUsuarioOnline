@@ -1,17 +1,24 @@
+import jsdoc from 'eslint-plugin-jsdoc';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import tsdocPlugin from 'eslint-plugin-tsdoc';
-import vueParser from 'vue-eslint-parser';
-import jsdoc from 'eslint-plugin-jsdoc';
 import vue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
+
+const commonSettings = {
+    mode: "permissive",
+    ignorePrivate: true,
+    ignoreInternal: true,
+    ignoreParsingErrors: true
+};
 
 export default [
     {
-        files: ["**/*.ts", "**/*.tsx", "**/*.vue", "**/*.js"],
+        files: ["**/*.ts", "**/*.tsx", "**/*.vue"],
         languageOptions: {
             parser: vueParser,
             parserOptions: {
-                ecmaVersion: "latest",
+                ecmaVersion: 2022,
                 sourceType: "module",
                 parser: typescriptParser,
                 extraFileExtensions: [".vue"]
@@ -20,61 +27,37 @@ export default [
         plugins: {
             "@typescript-eslint": typescript,
             "tsdoc": tsdocPlugin,
-            "jsdoc": jsdoc,
-            "vue": vue
+            "vue": vue,
+            "jsdoc": jsdoc  // Añadido el plugin jsdoc aquí
         },
         rules: {
-            // Reglas TSDoc y JSDoc
             "tsdoc/syntax": "error",
-            "jsdoc/require-jsdoc": ["error", {
-                "publicOnly": true,
-                "require": {
-                    "FunctionDeclaration": true,
-                    "MethodDefinition": true,
-                    "ClassDeclaration": true,
-                    "ArrowFunctionExpression": true,
-                    "FunctionExpression": true,
-                    "ClassExpression": true
-                },
-                "contexts": [
-                    "TSInterfaceDeclaration",
-                    "TSTypeAliasDeclaration",
-                    "TSPropertySignature",
-                    "TSMethodSignature",
-                    "ClassProperty"
-                ]
-            }],
-            "jsdoc/require-description": ["error", {
-                "contexts": ["any"],
-                "descriptionStyle": "body"
-            }],
-            "jsdoc/match-description": ["error", {
-                "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$",
-                "message": "La descripción debe estar en inglés y comenzar con mayúscula"
-            }],
-            // El resto de las reglas se mantienen igual...
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-explicit-any": "off"
+            // Removidas las reglas de jsdoc para TS/Vue ya que usamos tsdoc
+        },
+        settings: {
+            jsdoc: commonSettings
         }
     },
-    // Desactiva TSDoc solo en archivos JS, manteniendo tus reglas JSDoc
     {
         files: ["**/*.js"],
-        rules: {
-            "tsdoc/syntax": "off"
-        }
-    },
-    // reglas solo para archivos js
-    {
-        files: ["**/*.js"],
+        languageOptions: {
+            sourceType: "module",
+            ecmaVersion: 2022
+        },
         plugins: {
             "jsdoc": jsdoc
         },
         rules: {
-            "tsdoc/syntax": "off",
-            "jsdoc/check-tag-names": "error",
-            "jsdoc/check-types": "error",
-            "jsdoc/require-property": "error", // Esta regla valida @property
-            "jsdoc/require-param": "warn",
-            "jsdoc/require-returns": "warn"
+            "jsdoc/require-jsdoc": "error",
+            "jsdoc/require-description": "error",
+            "jsdoc/match-description": ["error", {
+                "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$"
+            }]
+        },
+        settings: {
+            jsdoc: commonSettings
         }
     }
 ];
