@@ -102,20 +102,11 @@ function prueba (grid){
  * Initializes the view and sets up event handlers.
  * @param Object grid - The datatable instance.
  */
-init(grid) {
+init(grid)
+{
     const _ = this.app.getService('locale')._; // Localization service
     const id_partner = this.getParam('partner', true); // Get partner ID from parameters
-    grid = $$('datatable'); // Reference to the datatable
-    var url = grid.data.url; // Store the URL for data fetching
-    var filter = ''; // Initialize filter variable
-    var optionsCategorias = []; // Initialize options for categories
-    var popup = webix.ui({
-        // Create edit window UI
-        view: 'window',
-        id: 'editwinProductsCryptoNetwork', // ID for the edit window
-        width: screen.width < 500 ? 350 : 450, // Width based on screen size
-        height: screen.width < 500 ? 680 : 300, // Height based on screen size
-        fullscreen: screen.width < 500 ? true : false, // Fullscreen mode based on screen size
+}
 
 
 // Ejecuta la inicialización al cargar el archivo
