@@ -9,9 +9,9 @@ import { fetchUsers, saveUser } from "./utils";
 /**
  * Configuración de la vista principal de usuarios.
  * @type object
- * @property string id - Identificador único de la tabla.
- * @property Array columns - Columnas de la tabla.
- * @property Array data - Datos iniciales de la tabla.
+ * @param string id - Identificador único de la tabla.
+ * @param Array columns - Columnas de la tabla.
+ * @param Array data - Datos iniciales de la tabla.
  */
 const userTable = {
     view: "datatable",
@@ -24,9 +24,9 @@ const userTable = {
     data: [],
     on: {
         /**
-         * Evento que se dispara al hacer clic en una fila.
-         * @param {string} id - ID del elemento clickeado.
-         * @param {object} e - Evento de clic.
+         * Event of function.
+         * @param {string} id - ID of element clicked.
+         * @param {object} e - Event of clic.
          */
         onItemClick: function(id, e) {
             showUserDetails(id);
@@ -48,8 +48,8 @@ const userForm = {
 
 
 /**
- * Muestra los detalles de un usuario.
- * @param {string} userId - ID del usuario a mostrar.
+ * Show details of users.
+ * @param {string} userId - ID of users to whatch.
  */
 function showUserDetails(userId) {
     // Lógica para mostrar detalles+}
@@ -57,7 +57,7 @@ function showUserDetails(userId) {
 }
 
 /**
- * Guarda el formulario de usuario.
+ * save the form.
  * @returns {void}
  */
 function saveForm() {
@@ -66,7 +66,7 @@ function saveForm() {
 }
 
 /**
- * Recarga los datos de usuarios en la tabla.
+ * this english.
  * @returns {Promise<void>}
  */
 async function reloadUsers() {
@@ -76,7 +76,7 @@ async function reloadUsers() {
 }
 
 /**
- * Inicializa la interfaz principal.
+ * start the doc.
  * @returns {void}
  */
 function init() {

@@ -1,29 +1,47 @@
 {
-  "name": "sitiousuarioonline",
-  "version": "1.0.0",
-  "description": "ejemplo de front",
-  "main": "index.ts",
-  "type": "module",
+  "name": "webix-jet-app",
+  "version": "1.1.0",
+  "description": "Webix Jet App",
+  "main": "sources/myapp.js",
   "scripts": {
-    "lint:docs": "eslint --max-warnings 0 --ext .ts,.tsx,.vue . --rule 'tsdoc/syntax: error' --rule 'jsdoc/require-jsdoc: error' --rule 'jsdoc/require-description: error' --rule 'jsdoc/match-description: error' --rule '@typescript-eslint/no-unused-vars: off' --rule '@typescript-eslint/no-explicit-any: off'",
-    "lint:docs:fix": "eslint --max-warnings 0 --ext .ts,.tsx,.vue . --rule 'tsdoc/syntax: error' --rule 'jsdoc/*: error'"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint sources/",
+    "build": "webpack --max_old_space_size=8192 --env.production true",
+    "build-dev": "webpack --env.production false",
+    "module": "webpack --env.production true --env.module true",
+    "standalone": "webpack --env.production true --env.module true --env.standalone true",
+    "start": "webpack-dev-server --host 0.0.0.0",
+    "start-nvm": "./start.sh",
+    "format": "prettier --write \"sources/**/*.{js,css}\"",
+    "lint:docs": "eslint --max-warnings 0 --ext .js sources/",
+    "lint:docs:fix": "eslint --max-warnings 0 --ext .js sources/ --fix"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "webix",
+    "jet"
+  ],
+  "license": "MIT",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.35.0",
-    "@typescript-eslint/parser": "^8.35.0",
-    "eslint": "^9.29.0",
-    "eslint-formatter-codeframe": "^7.32.1",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-syntax-dynamic-import": "^6.18.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.0",
+    "css-loader": "^0.28.7",
+    "eslint": "^8.57.0",
     "eslint-plugin-jsdoc": "^51.2.3",
-    "eslint-plugin-tsdoc": "^0.4.0",
-    "eslint-plugin-vue": "^10.2.0",
-    "espree": "^10.4.0",
-    "stylelint": "^16.20.0",
-    "vue-eslint-parser": "^10.1.4"
+    "file-loader": "^0.11.2",
+    "less": "^2.7.2",
+    "less-loader": "^4.0.5",
+    "mini-css-extract-plugin": "^0.4.5",
+    "prettier": "3.4.2",
+    "url-loader": "^0.5.9",
+    "webpack": "^4.12.1",
+    "webpack-cli": "^3.0.8",
+    "webpack-dev-server": "^3.1.4"
   },
   "dependencies": {
-    "vue": "^3.5.17"
+    "dotenv": "^16.4.5",
+    "webix-jet": "^2.1.3"
   }
 }

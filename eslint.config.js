@@ -1,9 +1,4 @@
 import jsdoc from 'eslint-plugin-jsdoc';
-import typescript from '@typescript-eslint/eslint-plugin';
-import typescriptParser from '@typescript-eslint/parser';
-import tsdocPlugin from 'eslint-plugin-tsdoc';
-import vue from 'eslint-plugin-vue';
-import vueParser from 'vue-eslint-parser';
 
 const commonSettings = {
     mode: "permissive",
@@ -14,47 +9,20 @@ const commonSettings = {
 
 export default [
     {
-        files: ["**/*.ts", "**/*.tsx", "**/*.vue"],
-        languageOptions: {
-            parser: vueParser,
-            parserOptions: {
-                ecmaVersion: 2022,
-                sourceType: "module",
-                parser: typescriptParser,
-                extraFileExtensions: [".vue"]
-            }
-        },
-        plugins: {
-            "@typescript-eslint": typescript,
-            "tsdoc": tsdocPlugin,
-            "vue": vue,
-            "jsdoc": jsdoc
-        },
-        rules: {
-            "tsdoc/syntax": ["error", {
-                "supportedTags": ["extends"]
-            }],
-            "@typescript-eslint/no-unused-vars": "off",
-            "@typescript-eslint/no-explicit-any": "off"
-        },
-        settings: {
-            jsdoc: commonSettings
-        }
-    },
-    {
         files: ["**/*.js"],
         languageOptions: {
             sourceType: "module",
             ecmaVersion: 2022
         },
         plugins: {
-            "jsdoc": jsdoc
+            jsdoc
         },
         rules: {
             "jsdoc/require-jsdoc": "error",
             "jsdoc/require-description": "error",
+            // Valida que la descripción esté en inglés (sin palabras comunes en español)
             "jsdoc/match-description": ["error", {
-                "matchDescription": "^[A-Z][a-zA-Z0-9,.'\"\\- \\(\\)]*$"
+                matchDescription: "^(?!.*\\b(el|la|de|una|un|este|esta|es|y|los|las|para|con|sin|por|en)\\b).*$"
             }]
         },
         settings: {
