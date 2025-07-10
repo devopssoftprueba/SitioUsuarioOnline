@@ -100,7 +100,7 @@ function prueba (grid){
 
 /**
  * Initializes the view and sets up event handlers.
- * @param Object  - The datatable instance.
+ * @param Object
  */
 init(grid)
 {
