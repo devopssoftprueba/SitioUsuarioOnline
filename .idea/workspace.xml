@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba nuevo eslint  (1)">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/webix.js" beforeDir="false" afterPath="$PROJECT_DIR$/webix.js" afterDir="false" />
-    </list>
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="reglas y configuraciones solo para webix" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -151,15 +145,7 @@
       <workItem from="1751054988424" duration="2504000" />
       <workItem from="1751459495852" duration="11000" />
       <workItem from="1752159447244" duration="371000" />
-      <workItem from="1752160453773" duration="8888000" />
-    </task>
-    <task id="LOCAL-00193" summary="optimización del script x15 -">
-      <option name="closed" value="true" />
-      <created>1746928018427</created>
-      <option name="number" value="00193" />
-      <option name="presentableId" value="LOCAL-00193" />
-      <option name="project" value="LOCAL" />
-      <updated>1746928018427</updated>
+      <workItem from="1752160453773" duration="9243000" />
     </task>
     <task id="LOCAL-00194" summary="optimización del script x15 - prueba 1">
       <option name="closed" value="true" />
@@ -545,7 +531,15 @@
       <option name="project" value="LOCAL" />
       <updated>1752177681182</updated>
     </task>
-    <option name="localTasksCounter" value="242" />
+    <task id="LOCAL-00242" summary="reglas y configuraciones solo para webix">
+      <option name="closed" value="true" />
+      <created>1752183326617</created>
+      <option name="number" value="00242" />
+      <option name="presentableId" value="LOCAL-00242" />
+      <option name="project" value="LOCAL" />
+      <updated>1752183326617</updated>
+    </task>
+    <option name="localTasksCounter" value="243" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -563,7 +557,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones" />
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones 1" />
     <MESSAGE value="prueba 1 (debe fallar)" />
     <MESSAGE value="prueba 1 (debe fallar 1)" />
@@ -588,6 +581,7 @@
     <MESSAGE value="prueba anterior funcionó bien, se corrige" />
     <MESSAGE value="prueba nuevo eslint" />
     <MESSAGE value="prueba nuevo eslint  (1)" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba nuevo eslint  (1)" />
+    <MESSAGE value="reglas y configuraciones solo para webix" />
+    <option name="LAST_COMMIT_MESSAGE" value="reglas y configuraciones solo para webix" />
   </component>
 </project>
