@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba anterior funcionó bien, se corrige">
+    <list default="true" id="9fe22a71-a4d6-40d0-a597-309d821b669d" name="Changes" comment="prueba nuevo eslint  (1)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/webix.js" beforeDir="false" afterPath="$PROJECT_DIR$/webix.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -142,22 +142,13 @@
       <workItem from="1750339999712" duration="14978000" />
       <workItem from="1750793446575" duration="11000" />
       <workItem from="1750853955086" duration="378000" />
-    </task>
-    <task id="LOCAL-00190" summary="optimización del script x14 - prueba">
-      <option name="closed" value="true" />
-      <created>1746827439184</created>
-      <option name="number" value="00190" />
-      <option name="presentableId" value="LOCAL-00190" />
-      <option name="project" value="LOCAL" />
-      <updated>1746827439184</updated>
-    </task>
-    <task id="LOCAL-00191" summary="optimización del script x14 - prueba 1">
-      <option name="closed" value="true" />
-      <created>1746926212946</created>
-      <option name="number" value="00191" />
-      <option name="presentableId" value="LOCAL-00191" />
-      <option name="project" value="LOCAL" />
-      <updated>1746926212946</updated>
+      <workItem from="1750862885398" duration="7676000" />
+      <workItem from="1750881845382" duration="40000" />
+      <workItem from="1750942325865" duration="7337000" />
+      <workItem from="1751054988424" duration="2504000" />
+      <workItem from="1751459495852" duration="11000" />
+      <workItem from="1752159447244" duration="371000" />
+      <workItem from="1752160453773" duration="5048000" />
     </task>
     <task id="LOCAL-00192" summary="optimización del script x14 - prueba 2">
       <option name="closed" value="true" />
@@ -535,7 +526,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750457680009</updated>
     </task>
-    <option name="localTasksCounter" value="239" />
+    <task id="LOCAL-00239" summary="prueba nuevo eslint">
+      <option name="closed" value="true" />
+      <created>1750868877091</created>
+      <option name="number" value="00239" />
+      <option name="presentableId" value="LOCAL-00239" />
+      <option name="project" value="LOCAL" />
+      <updated>1750868877091</updated>
+    </task>
+    <task id="LOCAL-00240" summary="prueba nuevo eslint  (1)">
+      <option name="closed" value="true" />
+      <created>1750868945323</created>
+      <option name="number" value="00240" />
+      <option name="presentableId" value="LOCAL-00240" />
+      <option name="project" value="LOCAL" />
+      <updated>1750868945323</updated>
+    </task>
+    <option name="localTasksCounter" value="241" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -553,8 +560,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="prueba sin tsdoc en .vue" />
-    <MESSAGE value="actualizacion nuevos archivos" />
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones" />
     <MESSAGE value="actualizacion nuevas reglas para reconocer todas las extenciones 1" />
     <MESSAGE value="prueba 1 (debe fallar)" />
@@ -578,6 +583,8 @@
     <MESSAGE value="solucion errores de documentación" />
     <MESSAGE value="prueba ingles" />
     <MESSAGE value="prueba anterior funcionó bien, se corrige" />
-    <option name="LAST_COMMIT_MESSAGE" value="prueba anterior funcionó bien, se corrige" />
+    <MESSAGE value="prueba nuevo eslint" />
+    <MESSAGE value="prueba nuevo eslint  (1)" />
+    <option name="LAST_COMMIT_MESSAGE" value="prueba nuevo eslint  (1)" />
   </component>
 </project>

@@ -28,13 +28,14 @@ export default [
             "@typescript-eslint": typescript,
             "tsdoc": tsdocPlugin,
             "vue": vue,
-            "jsdoc": jsdoc  // Añadido el plugin jsdoc aquí
+            "jsdoc": jsdoc
         },
         rules: {
-            "tsdoc/syntax": "error",
+            "tsdoc/syntax": ["error", {
+                "supportedTags": ["extends"]
+            }],
             "@typescript-eslint/no-unused-vars": "off",
             "@typescript-eslint/no-explicit-any": "off"
-            // Removidas las reglas de jsdoc para TS/Vue ya que usamos tsdoc
         },
         settings: {
             jsdoc: commonSettings
